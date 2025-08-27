@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: repub
+spec:
+  selector:
+    app: repub
+  ports:
+    - name: graphql
+      port: 8080
+      targetPort: 8080
