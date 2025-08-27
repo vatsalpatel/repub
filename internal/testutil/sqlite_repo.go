@@ -26,12 +26,6 @@ func (r *sqlitePackageRepository) GetPackage(ctx context.Context, name string) (
 		return nil, err
 	}
 
-	var topics []string
-	if pkg.Topics.Valid && pkg.Topics.String != "" {
-		// For SQLite, topics are stored as JSON string, would need proper parsing in real implementation
-		topics = []string{} // Simplified for test
-	}
-
 	return &domain.Package{
 		ID:            int32(pkg.ID),
 		Name:          pkg.Name,
@@ -40,9 +34,6 @@ func (r *sqlitePackageRepository) GetPackage(ctx context.Context, name string) (
 		Homepage:      sqliteNullStringToPtr(pkg.Homepage),
 		Repository:    sqliteNullStringToPtr(pkg.Repository),
 		Documentation: sqliteNullStringToPtr(pkg.Documentation),
-		Topics:        topics,
-		DownloadCount: pkg.DownloadCount,
-		LikeCount:     int32(pkg.LikeCount),
 		CreatedAt:     pkg.CreatedAt,
 		UpdatedAt:     pkg.UpdatedAt,
 	}, nil
@@ -65,9 +56,6 @@ func (r *sqlitePackageRepository) CreatePackage(ctx context.Context, name string
 		Homepage:      sqliteNullStringToPtr(pkg.Homepage),
 		Repository:    sqliteNullStringToPtr(pkg.Repository),
 		Documentation: sqliteNullStringToPtr(pkg.Documentation),
-		Topics:        []string{},
-		DownloadCount: pkg.DownloadCount,
-		LikeCount:     int32(pkg.LikeCount),
 		CreatedAt:     pkg.CreatedAt,
 		UpdatedAt:     pkg.UpdatedAt,
 	}, nil
@@ -92,9 +80,6 @@ func (r *sqlitePackageRepository) ListPackages(ctx context.Context, limit, offse
 			Homepage:      sqliteNullStringToPtr(pkg.Homepage),
 			Repository:    sqliteNullStringToPtr(pkg.Repository),
 			Documentation: sqliteNullStringToPtr(pkg.Documentation),
-			Topics:        []string{},
-			DownloadCount: pkg.DownloadCount,
-			LikeCount:     int32(pkg.LikeCount),
 			CreatedAt:     pkg.CreatedAt,
 			UpdatedAt:     pkg.UpdatedAt,
 		}
@@ -123,7 +108,6 @@ func (r *sqlitePackageRepository) GetPackageVersions(ctx context.Context, packag
 			ArchiveSha256: sqliteNullStringToPtr(v.ArchiveSha256),
 			Uploader:      sqliteNullStringToPtr(v.Uploader),
 			Retracted:     v.Retracted,
-			DownloadCount: v.DownloadCount,
 			CreatedAt:     v.CreatedAt,
 		}
 	}
@@ -152,7 +136,6 @@ func (r *sqlitePackageRepository) GetLatestVersion(ctx context.Context, packageI
 		ArchiveSha256: sqliteNullStringToPtr(version.ArchiveSha256),
 		Uploader:      sqliteNullStringToPtr(version.Uploader),
 		Retracted:     version.Retracted,
-		DownloadCount: version.DownloadCount,
 		CreatedAt:     version.CreatedAt,
 	}, nil
 }
@@ -210,7 +193,6 @@ func (r *sqlitePackageRepository) CreateVersion(ctx context.Context, version *do
 		ArchiveSha256: sqliteNullStringToPtr(created.ArchiveSha256),
 		Uploader:      sqliteNullStringToPtr(created.Uploader),
 		Retracted:     created.Retracted,
-		DownloadCount: created.DownloadCount,
 		CreatedAt:     created.CreatedAt,
 	}, nil
 }

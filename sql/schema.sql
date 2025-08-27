@@ -6,9 +6,6 @@ CREATE TABLE packages (
     homepage TEXT,
     repository TEXT,
     documentation TEXT,
-    topics TEXT[], -- JSON array of topics like ["state-management", "bloc"]
-    download_count BIGINT NOT NULL DEFAULT 0,
-    like_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -25,7 +22,6 @@ CREATE TABLE package_versions (
     archive_sha256 TEXT,
     uploader TEXT,
     retracted BOOLEAN NOT NULL DEFAULT FALSE,
-    download_count BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     UNIQUE(package_id, version)
 );
