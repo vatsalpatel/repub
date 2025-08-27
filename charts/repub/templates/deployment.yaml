@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: repub
+  {{- template "reloader-annotations" }}
+  labels:
+    app: repub
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ default 1 .Values.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: repub
+  template:
+    metadata:
+      labels:
+        app: repub
+    spec:
+      containers:
+        - name: repub
+          image: '{{ required "An image repository must be provided" .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}'
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: POD_VERSION
+              value: "{{ .Values.image.tag }}"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['app']
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            {{- range $key, $value := .Values.environ }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
