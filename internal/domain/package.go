@@ -10,9 +10,6 @@ type Package struct {
 	Homepage      *string   `json:"homepage"`
 	Repository    *string   `json:"repository"`
 	Documentation *string   `json:"documentation"`
-	Topics        []string  `json:"topics"`
-	DownloadCount int64     `json:"download_count"`
-	LikeCount     int32     `json:"like_count"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -29,7 +26,6 @@ type PackageVersion struct {
 	ArchiveSha256 *string   `json:"archive_sha256"`
 	Uploader      *string   `json:"uploader"`
 	Retracted     bool      `json:"retracted"`
-	DownloadCount int64     `json:"download_count"`
 	CreatedAt     time.Time `json:"created_at"`
 }
 
@@ -42,10 +38,9 @@ type PackageResponse struct {
 
 // Extended package info for UI display
 type PackageDetail struct {
-	Package      *Package        `json:"package"`
-	Latest       *PackageVersion `json:"latest"`
-	Versions     []*PackageVersion `json:"versions"`
-	TotalDownloads int64         `json:"total_downloads"`
+	Package  *Package          `json:"package"`
+	Latest   *PackageVersion   `json:"latest"`
+	Versions []*PackageVersion `json:"versions"`
 }
 
 type VersionResponse struct {

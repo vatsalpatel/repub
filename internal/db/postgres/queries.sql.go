@@ -8,8 +8,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-
-	"github.com/lib/pq"
 )
 
 const addPackageUploader = `-- name: AddPackageUploader :exec
@@ -29,9 +27,9 @@ func (q *Queries) AddPackageUploader(ctx context.Context, arg AddPackageUploader
 }
 
 const createPackage = `-- name: CreatePackage :one
-INSERT INTO packages (name, private, description, homepage, repository, documentation, topics)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, name, private, description, homepage, repository, documentation, topics, download_count, like_count, created_at, updated_at
+INSERT INTO packages (name, private, description, homepage, repository, documentation)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, name, private, description, homepage, repository, documentation, created_at, updated_at
 `
 
 type CreatePackageParams struct {
@@ -41,7 +39,6 @@ type CreatePackageParams struct {
 	Homepage      sql.NullString `json:"homepage"`
 	Repository    sql.NullString `json:"repository"`
 	Documentation sql.NullString `json:"documentation"`
-	Topics        []string       `json:"topics"`
 }
 
 func (q *Queries) CreatePackage(ctx context.Context, arg CreatePackageParams) (Package, error) {
@@ -52,7 +49,6 @@ func (q *Queries) CreatePackage(ctx context.Context, arg CreatePackageParams) (P
 		arg.Homepage,
 		arg.Repository,
 		arg.Documentation,
-		pq.Array(arg.Topics),
 	)
 	var i Package
 	err := row.Scan(
@@ -63,9 +59,6 @@ func (q *Queries) CreatePackage(ctx context.Context, arg CreatePackageParams) (P
 		&i.Homepage,
 		&i.Repository,
 		&i.Documentation,
-		pq.Array(&i.Topics),
-		&i.DownloadCount,
-		&i.LikeCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -77,7 +70,7 @@ INSERT INTO package_versions (
     package_id, version, description, pubspec_yaml, readme, changelog,
     archive_path, archive_sha256, uploader
 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, package_id, version, description, pubspec_yaml, readme, changelog, archive_path, archive_sha256, uploader, retracted, download_count, created_at
+RETURNING id, package_id, version, description, pubspec_yaml, readme, changelog, archive_path, archive_sha256, uploader, retracted, created_at
 `
 
 type CreatePackageVersionParams struct {
@@ -117,14 +110,13 @@ func (q *Queries) CreatePackageVersion(ctx context.Context, arg CreatePackageVer
 		&i.ArchiveSha256,
 		&i.Uploader,
 		&i.Retracted,
-		&i.DownloadCount,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getLatestPackageVersion = `-- name: GetLatestPackageVersion :one
-SELECT id, package_id, version, description, pubspec_yaml, readme, changelog, archive_path, archive_sha256, uploader, retracted, download_count, created_at FROM package_versions 
+SELECT id, package_id, version, description, pubspec_yaml, readme, changelog, archive_path, archive_sha256, uploader, retracted, created_at FROM package_versions 
 WHERE package_id = $1 AND retracted = false
 ORDER BY created_at DESC 
 LIMIT 1
@@ -145,14 +137,13 @@ func (q *Queries) GetLatestPackageVersion(ctx context.Context, packageID int32) 
 		&i.ArchiveSha256,
 		&i.Uploader,
 		&i.Retracted,
-		&i.DownloadCount,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getPackage = `-- name: GetPackage :one
-SELECT id, name, private, description, homepage, repository, documentation, topics, download_count, like_count, created_at, updated_at FROM packages WHERE name = $1
+SELECT id, name, private, description, homepage, repository, documentation, created_at, updated_at FROM packages WHERE name = $1
 `
 
 func (q *Queries) GetPackage(ctx context.Context, name string) (Package, error) {
@@ -166,9 +157,6 @@ func (q *Queries) GetPackage(ctx context.Context, name string) (Package, error) 
 		&i.Homepage,
 		&i.Repository,
 		&i.Documentation,
-		pq.Array(&i.Topics),
-		&i.DownloadCount,
-		&i.LikeCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -203,7 +191,7 @@ func (q *Queries) GetPackageUploaders(ctx context.Context, packageID int32) ([]s
 }
 
 const getPackageVersions = `-- name: GetPackageVersions :many
-SELECT id, package_id, version, description, pubspec_yaml, readme, changelog, archive_path, archive_sha256, uploader, retracted, download_count, created_at FROM package_versions 
+SELECT id, package_id, version, description, pubspec_yaml, readme, changelog, archive_path, archive_sha256, uploader, retracted, created_at FROM package_versions 
 WHERE package_id = $1 
 ORDER BY created_at DESC
 `
@@ -229,7 +217,6 @@ func (q *Queries) GetPackageVersions(ctx context.Context, packageID int32) ([]Pa
 			&i.ArchiveSha256,
 			&i.Uploader,
 			&i.Retracted,
-			&i.DownloadCount,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -245,32 +232,8 @@ func (q *Queries) GetPackageVersions(ctx context.Context, packageID int32) ([]Pa
 	return items, nil
 }
 
-const incrementDownloadCount = `-- name: IncrementDownloadCount :exec
-UPDATE package_versions SET download_count = download_count + 1 
-WHERE package_id = $1 AND version = $2
-`
-
-type IncrementDownloadCountParams struct {
-	PackageID int32  `json:"package_id"`
-	Version   string `json:"version"`
-}
-
-func (q *Queries) IncrementDownloadCount(ctx context.Context, arg IncrementDownloadCountParams) error {
-	_, err := q.db.ExecContext(ctx, incrementDownloadCount, arg.PackageID, arg.Version)
-	return err
-}
-
-const incrementPackageDownloadCount = `-- name: IncrementPackageDownloadCount :exec
-UPDATE packages SET download_count = download_count + 1 WHERE id = $1
-`
-
-func (q *Queries) IncrementPackageDownloadCount(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, incrementPackageDownloadCount, id)
-	return err
-}
-
 const listPackages = `-- name: ListPackages :many
-SELECT id, name, private, description, homepage, repository, documentation, topics, download_count, like_count, created_at, updated_at FROM packages 
+SELECT id, name, private, description, homepage, repository, documentation,  created_at, updated_at FROM packages 
 ORDER BY name
 LIMIT $1 OFFSET $2
 `
@@ -297,9 +260,6 @@ func (q *Queries) ListPackages(ctx context.Context, arg ListPackagesParams) ([]P
 			&i.Homepage,
 			&i.Repository,
 			&i.Documentation,
-			pq.Array(&i.Topics),
-			&i.DownloadCount,
-			&i.LikeCount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -318,7 +278,7 @@ func (q *Queries) ListPackages(ctx context.Context, arg ListPackagesParams) ([]P
 
 const updatePackageMetadata = `-- name: UpdatePackageMetadata :exec
 UPDATE packages 
-SET description = $2, homepage = $3, repository = $4, documentation = $5, topics = $6, updated_at = NOW()
+SET description = $2, homepage = $3, repository = $4, documentation = $5, updated_at = NOW()
 WHERE id = $1
 `
 
@@ -328,7 +288,6 @@ type UpdatePackageMetadataParams struct {
 	Homepage      sql.NullString `json:"homepage"`
 	Repository    sql.NullString `json:"repository"`
 	Documentation sql.NullString `json:"documentation"`
-	Topics        []string       `json:"topics"`
 }
 
 func (q *Queries) UpdatePackageMetadata(ctx context.Context, arg UpdatePackageMetadataParams) error {
@@ -338,7 +297,6 @@ func (q *Queries) UpdatePackageMetadata(ctx context.Context, arg UpdatePackageMe
 		arg.Homepage,
 		arg.Repository,
 		arg.Documentation,
-		pq.Array(arg.Topics),
 	)
 	return err
 }

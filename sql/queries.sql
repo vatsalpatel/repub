@@ -1,6 +1,6 @@
 -- name: CreatePackage :one
-INSERT INTO packages (name, private, description, homepage, repository, documentation, topics)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO packages (name, private, description, homepage, repository, documentation)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetPackage :one
@@ -37,14 +37,7 @@ ON CONFLICT (package_id, uploader) DO NOTHING;
 -- name: GetPackageUploaders :many
 SELECT uploader FROM package_uploaders WHERE package_id = $1;
 
--- name: IncrementDownloadCount :exec
-UPDATE package_versions SET download_count = download_count + 1 
-WHERE package_id = $1 AND version = $2;
-
--- name: IncrementPackageDownloadCount :exec
-UPDATE packages SET download_count = download_count + 1 WHERE id = $1;
-
 -- name: UpdatePackageMetadata :exec
 UPDATE packages 
-SET description = $2, homepage = $3, repository = $4, documentation = $5, topics = $6, updated_at = NOW()
+SET description = $2, homepage = $3, repository = $4, documentation = $5, updated_at = NOW()
 WHERE id = $1;

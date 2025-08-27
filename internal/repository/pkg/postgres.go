@@ -32,9 +32,6 @@ func (r *postgresPackageRepository) GetPackage(ctx context.Context, name string)
 		Homepage:      nullStringToPtr(pkg.Homepage),
 		Repository:    nullStringToPtr(pkg.Repository),
 		Documentation: nullStringToPtr(pkg.Documentation),
-		Topics:        pkg.Topics,
-		DownloadCount: pkg.DownloadCount,
-		LikeCount:     pkg.LikeCount,
 		CreatedAt:     pkg.CreatedAt,
 		UpdatedAt:     pkg.UpdatedAt,
 	}, nil
@@ -57,9 +54,6 @@ func (r *postgresPackageRepository) CreatePackage(ctx context.Context, name stri
 		Homepage:      nullStringToPtr(pkg.Homepage),
 		Repository:    nullStringToPtr(pkg.Repository),
 		Documentation: nullStringToPtr(pkg.Documentation),
-		Topics:        pkg.Topics,
-		DownloadCount: pkg.DownloadCount,
-		LikeCount:     pkg.LikeCount,
 		CreatedAt:     pkg.CreatedAt,
 		UpdatedAt:     pkg.UpdatedAt,
 	}, nil
@@ -84,9 +78,6 @@ func (r *postgresPackageRepository) ListPackages(ctx context.Context, limit, off
 			Homepage:      nullStringToPtr(pkg.Homepage),
 			Repository:    nullStringToPtr(pkg.Repository),
 			Documentation: nullStringToPtr(pkg.Documentation),
-			Topics:        pkg.Topics,
-			DownloadCount: pkg.DownloadCount,
-			LikeCount:     pkg.LikeCount,
 			CreatedAt:     pkg.CreatedAt,
 			UpdatedAt:     pkg.UpdatedAt,
 		}
@@ -115,7 +106,6 @@ func (r *postgresPackageRepository) GetPackageVersions(ctx context.Context, pack
 			ArchiveSha256: nullStringToPtr(v.ArchiveSha256),
 			Uploader:      nullStringToPtr(v.Uploader),
 			Retracted:     v.Retracted,
-			DownloadCount: v.DownloadCount,
 			CreatedAt:     v.CreatedAt,
 		}
 	}
@@ -144,7 +134,6 @@ func (r *postgresPackageRepository) GetLatestVersion(ctx context.Context, packag
 		ArchiveSha256: nullStringToPtr(version.ArchiveSha256),
 		Uploader:      nullStringToPtr(version.Uploader),
 		Retracted:     version.Retracted,
-		DownloadCount: version.DownloadCount,
 		CreatedAt:     version.CreatedAt,
 	}, nil
 }
@@ -202,7 +191,6 @@ func (r *postgresPackageRepository) CreateVersion(ctx context.Context, version *
 		ArchiveSha256: nullStringToPtr(created.ArchiveSha256),
 		Uploader:      nullStringToPtr(created.Uploader),
 		Retracted:     created.Retracted,
-		DownloadCount: created.DownloadCount,
 		CreatedAt:     created.CreatedAt,
 	}, nil
 }

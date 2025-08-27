@@ -17,9 +17,6 @@ type Package struct {
 	Homepage      sql.NullString `json:"homepage"`
 	Repository    sql.NullString `json:"repository"`
 	Documentation sql.NullString `json:"documentation"`
-	Topics        sql.NullString `json:"topics"`
-	DownloadCount int64          `json:"download_count"`
-	LikeCount     int64          `json:"like_count"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 }
@@ -41,6 +38,5 @@ type PackageVersion struct {
 	ArchiveSha256 sql.NullString `json:"archive_sha256"`
 	Uploader      sql.NullString `json:"uploader"`
 	Retracted     bool           `json:"retracted"`
-	DownloadCount int64          `json:"download_count"`
 	CreatedAt     time.Time      `json:"created_at"`
 }

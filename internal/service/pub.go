@@ -72,10 +72,17 @@ func (s *packageService) GetPackage(ctx context.Context, name string) (*domain.P
 	// Convert to response format
 	versionResponses := make([]domain.VersionResponse, len(versions))
 	for i, v := range versions {
-		versionResponses[i] = s.versionToResponseWithPackage(v, pkg.Name)
+		resp, err := s.versionToResponseWithPackage(v, pkg.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert version response: %w", err)
+		}
+		versionResponses[i] = resp
 	}
 
-	latest := s.versionToResponseWithPackage(versions[0], pkg.Name) // First is latest due to ORDER BY created_at DESC
+	latest, err := s.versionToResponseWithPackage(versions[0], pkg.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert latest version response: %w", err)
+	}
 
 	return &domain.PackageResponse{
 		Name:     pkg.Name,
@@ -102,18 +109,10 @@ func (s *packageService) GetPackageDetail(ctx context.Context, name string) (*do
 		return nil, fmt.Errorf("package has no versions")
 	}
 
-	// Calculate total downloads
-	var totalDownloads int64
-	for _, version := range versions {
-		totalDownloads += version.DownloadCount
-	}
-	totalDownloads += pkg.DownloadCount
-
 	return &domain.PackageDetail{
-		Package:        pkg,
-		Latest:         versions[0], // First is latest due to ORDER BY created_at DESC
-		Versions:       versions,
-		TotalDownloads: totalDownloads,
+		Package:  pkg,
+		Latest:   versions[0], // First is latest due to ORDER BY created_at DESC
+		Versions: versions,
 	}, nil
 }
 
@@ -226,42 +225,23 @@ func (s *packageService) ListPackages(ctx context.Context, page, size int) ([]*d
 	return packages, nil
 }
 
-func (s *packageService) versionToResponseWithPackage(v *domain.PackageVersion, packageName string) domain.VersionResponse {
+func (s *packageService) versionToResponseWithPackage(v *domain.PackageVersion, packageName string) (domain.VersionResponse, error) {
 	archiveURL := fmt.Sprintf("%s/packages/%s/versions/%s/download", s.baseURL(), packageName, v.Version)
 
 	// Parse pubspec YAML to JSON
+	parsed, err := s.Pubspec.ParseYAML(context.Background(), v.PubspecYaml)
+	if err != nil {
+		return domain.VersionResponse{}, err
+	}
+
+	jsonBytes, err := json.Marshal(parsed)
+	if err != nil {
+		return domain.VersionResponse{}, err
+	}
+
 	var pubspecJSON map[string]any
-	if v.PubspecYaml != "" {
-		if parsed, err := s.Pubspec.ParseYAML(context.Background(), v.PubspecYaml); err == nil {
-			// Convert the typed pubspec to JSON map
-			if jsonBytes, err := json.Marshal(parsed); err == nil {
-				if err := json.Unmarshal(jsonBytes, &pubspecJSON); err != nil {
-					// Fallback to basic pubspec if JSON conversion fails
-					pubspecJSON = map[string]any{
-						"name":    packageName,
-						"version": v.Version,
-					}
-				}
-			} else {
-				// Fallback to basic pubspec if marshal fails
-				pubspecJSON = map[string]any{
-					"name":    packageName,
-					"version": v.Version,
-				}
-			}
-		} else {
-			// Fallback to basic pubspec if parsing fails
-			pubspecJSON = map[string]any{
-				"name":    packageName,
-				"version": v.Version,
-			}
-		}
-	} else {
-		// Basic pubspec if no YAML stored
-		pubspecJSON = map[string]any{
-			"name":    packageName,
-			"version": v.Version,
-		}
+	if err := json.Unmarshal(jsonBytes, &pubspecJSON); err != nil {
+		return domain.VersionResponse{}, err
 	}
 
 	return domain.VersionResponse{
@@ -270,7 +250,7 @@ func (s *packageService) versionToResponseWithPackage(v *domain.PackageVersion, 
 		ArchiveURL:    archiveURL,
 		ArchiveSha256: stringValue(v.ArchiveSha256),
 		Pubspec:       pubspecJSON,
-	}
+	}, nil
 }
 
 func (s *packageService) GetPackageVersion(ctx context.Context, name, version string) (*domain.VersionResponse, error) {
@@ -289,7 +269,10 @@ func (s *packageService) GetPackageVersion(ctx context.Context, name, version st
 
 	for _, v := range versions {
 		if v.Version == version {
-			response := s.versionToResponseWithPackage(v, name)
+			response, err := s.versionToResponseWithPackage(v, name)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert version response: %w", err)
+			}
 			return &response, nil
 		}
 	}

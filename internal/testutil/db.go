@@ -114,16 +114,16 @@ func (tdb *TestDatabase) CreateTestPackageWithMetadata(ctx context.Context, req 
 	}
 
 	// Update with metadata if provided
-	if req.Description != nil || req.Homepage != nil || req.Repository != nil || 
-	   req.Documentation != nil || len(req.Topics) > 0 {
-		
+	if req.Description != nil || req.Homepage != nil || req.Repository != nil ||
+		req.Documentation != nil {
+
 		// Create a version of the sqlite repository that supports metadata updates
 		sqliteRepo := tdb.Repo.(*sqlitePackageRepository)
-		
+
 		updateParams := sqlite.UpdatePackageMetadataParams{
 			ID: int64(pkg.ID),
 		}
-		
+
 		if req.Description != nil {
 			updateParams.Description = sql.NullString{String: *req.Description, Valid: true}
 		}
@@ -136,16 +136,12 @@ func (tdb *TestDatabase) CreateTestPackageWithMetadata(ctx context.Context, req 
 		if req.Documentation != nil {
 			updateParams.Documentation = sql.NullString{String: *req.Documentation, Valid: true}
 		}
-		if len(req.Topics) > 0 {
-			// For SQLite, we'll store topics as JSON string
-			updateParams.Topics = sql.NullString{String: `["` + req.Topics[0] + `"]`, Valid: true}
-		}
-		
+
 		err = sqliteRepo.queries.UpdatePackageMetadata(ctx, updateParams)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Refetch the updated package
 		return tdb.Repo.GetPackage(ctx, req.Name)
 	}
@@ -161,7 +157,6 @@ type CreatePackageRequest struct {
 	Homepage      *string
 	Repository    *string
 	Documentation *string
-	Topics        []string
 }
 
 // CreateTestPackageVersion creates a test package version
