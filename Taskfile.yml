@@ -1,0 +1,44 @@
+version: "3"
+
+tasks:
+  dev:
+    desc: Run development environment with docker-compose
+    cmds:
+      - docker-compose --profile dev up --build
+
+  gen:
+    desc: Generate all code
+    cmds:
+      - sqlc generate
+      - templ generate
+      - npm run build-css-prod
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - go test ./...
+
+  test:integration:
+    desc: Run integration tests with real Dart CLI
+    dir: tests
+    cmds:
+      - ./run_integration_tests.sh
+
+  deps:
+    desc: Install dependencies
+    cmds:
+      - go mod download
+      - go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+      - go install github.com/a-h/templ/cmd/templ@latest
+      - go install github.com/air-verse/air@latest
+      - npm install
+
+  db:reset:
+    desc: Reset database with new schema
+    env:
+      DATABASE_URL: '{{.DATABASE_URL | default "postgres://repub:repub@localhost:5432/repub?sslmode=disable"}}'
+      POSTGRES_URL: '{{(.DATABASE_URL | default "postgres://repub:repub@localhost:5432/repub?sslmode=disable") | replace "/repub?" "/postgres?"}}'
+    cmds:
+      - psql $POSTGRES_URL -c "DROP DATABASE IF EXISTS repub;"
+      - psql $POSTGRES_URL -c "CREATE DATABASE repub;"
+      - psql $DATABASE_URL -f sql/schema.sql

@@ -1,0 +1,10 @@
+name: math_utils
+description: A collection of useful mathematical utility functions.
+version: 1.2.0
+homepage: https://example.com/math_utils
+repository: https://github.com/example/math_utils
+
+environment:
+  sdk: ^3.0.0
+
+publish_to: http://localhost:19090

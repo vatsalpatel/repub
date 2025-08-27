@@ -1,0 +1,90 @@
+package templates
+
+import "repub/internal/domain"
+import "fmt"
+
+templ PackagesList(packages []*domain.Package) {
+	@Base("Packages", PackagesContent(packages))
+}
+
+templ PackagesContent(packages []*domain.Package) {
+	<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<div class="mb-8">
+			<h1 class="text-3xl font-bold text-gray-900">Dart Packages</h1>
+			<p class="text-gray-600 mt-2">{ fmt.Sprintf("%d packages available", len(packages)) }</p>
+		</div>
+		
+		if len(packages) == 0 {
+			<div class="bg-white border border-gray-200 rounded-lg p-12 text-center">
+				<div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+					<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8v2m0 0V3m0 2h2m-2 0H8"></path>
+					</svg>
+				</div>
+				<h3 class="text-lg font-medium text-gray-900 mb-2">No packages available</h3>
+				<p class="text-gray-500">Start by publishing your first package to this repository.</p>
+			</div>
+		} else {
+			<div class="grid gap-6">
+				for _, pkg := range packages {
+					<div class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+						<div class="flex items-start justify-between">
+							<div class="flex-1">
+								<div class="flex items-center space-x-3">
+									<div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+										<span class="text-white font-bold">{ string(pkg.Name[0]) }</span>
+									</div>
+									<div class="flex-1">
+										<h3 class="text-xl font-semibold text-gray-900 mb-1">
+											<a href={ templ.URL("/packages/" + pkg.Name) } class="hover:text-blue-600 transition-colors">
+												{ pkg.Name }
+											</a>
+										</h3>
+										if pkg.Description != nil {
+											<p class="text-gray-600 mb-2 line-clamp-2">{ *pkg.Description }</p>
+										}
+									</div>
+								</div>
+								
+								<!-- Stats and metadata -->
+								<div class="flex items-center space-x-6 mt-4 text-sm text-gray-500">
+									<div class="flex items-center space-x-1">
+										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+										</svg>
+										<span>{ fmt.Sprintf("%d downloads", pkg.DownloadCount) }</span>
+									</div>
+									<span>Published { pkg.CreatedAt.Format("Jan 2, 2006") }</span>
+								</div>
+								
+								<!-- Topics -->
+								if len(pkg.Topics) > 0 {
+									<div class="flex flex-wrap gap-2 mt-3">
+										for _, topic := range pkg.Topics {
+											<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+												#{ topic }
+											</span>
+										}
+									</div>
+								}
+							</div>
+							
+							<!-- Status badges -->
+							<div class="flex flex-col space-y-2 ml-4">
+								if pkg.Private {
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+										Private
+									</span>
+								} else {
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+										Public
+									</span>
+								}
+							</div>
+						</div>
+					</div>
+				}
+			</div>
+		}
+	</div>
+}

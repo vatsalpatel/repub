@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>pubspec: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">repub/internal/repository/pubspec/parser.go (90.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package pubspec
+
+import (
+        "context"
+        "fmt"
+        "repub/internal/domain"
+        "strings"
+
+        "gopkg.in/yaml.v3"
+)
+
+type parserRepository struct{}
+
+// NewParserRepository creates a new pubspec parser repository
+func NewParserRepository() Repository <span class="cov8" title="1">{
+        return &amp;parserRepository{}
+}</span>
+
+func (p *parserRepository) ParseYAML(ctx context.Context, yamlContent string) (*domain.Pubspec, error) <span class="cov8" title="1">{
+        if strings.TrimSpace(yamlContent) == "" </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("pubspec content is empty")
+        }</span>
+
+        // Parse YAML to strongly typed struct
+        <span class="cov8" title="1">var pubspec domain.Pubspec
+        if err := yaml.Unmarshal([]byte(yamlContent), &amp;pubspec); err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("failed to parse YAML: %w", err)
+        }</span>
+
+        // Validate required fields
+        <span class="cov8" title="1">if err := p.ValidatePubspec(ctx, &amp;pubspec); err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("pubspec validation failed: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return &amp;pubspec, nil</span>
+}
+
+func (p *parserRepository) ValidatePubspec(ctx context.Context, pubspec *domain.Pubspec) error <span class="cov8" title="1">{
+        if pubspec.Name == "" </span><span class="cov8" title="1">{
+                return fmt.Errorf("package name is required")
+        }</span>
+
+        <span class="cov8" title="1">if pubspec.Version == "" </span><span class="cov8" title="1">{
+                return fmt.Errorf("package version is required")
+        }</span>
+
+        // Validate package name format
+        <span class="cov8" title="1">if !isValidPackageName(pubspec.Name) </span><span class="cov8" title="1">{
+                return fmt.Errorf("invalid package name format: %s", pubspec.Name)
+        }</span>
+
+        // Validate version format (basic semantic versioning)
+        <span class="cov8" title="1">if !isValidVersion(pubspec.Version) </span><span class="cov8" title="1">{
+                return fmt.Errorf("invalid version format: %s", pubspec.Version)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+
+func (p *parserRepository) ExtractDependencies(ctx context.Context, pubspec *domain.Pubspec) (map[string]*domain.Dependency, error) <span class="cov8" title="1">{
+        dependencies := make(map[string]*domain.Dependency)
+
+        // Process regular dependencies
+        for name, dep := range pubspec.Dependencies </span><span class="cov8" title="1">{
+                parsed, err := p.parseDependency(name, dep)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to parse dependency %s: %w", name, err)
+                }</span>
+                <span class="cov8" title="1">dependencies[name] = parsed</span>
+        }
+
+        // Process dev dependencies
+        <span class="cov8" title="1">for name, dep := range pubspec.DevDependencies </span><span class="cov8" title="1">{
+                parsed, err := p.parseDependency(name, dep)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to parse dev dependency %s: %w", name, err)
+                }</span>
+                <span class="cov8" title="1">dependencies[name] = parsed</span>
+        }
+
+        <span class="cov8" title="1">return dependencies, nil</span>
+}
+
+func (p *parserRepository) parseDependency(name string, dep interface{}) (*domain.Dependency, error) <span class="cov8" title="1">{
+        switch v := dep.(type) </span>{
+        case string:<span class="cov8" title="1">
+                // Simple version constraint
+                return &amp;domain.Dependency{Version: v}, nil</span>
+        case map[string]interface{}:<span class="cov8" title="1">
+                // Complex dependency specification
+                dependency := &amp;domain.Dependency{
+                        Extra: make(map[string]interface{}),
+                }
+
+                for key, value := range v </span><span class="cov8" title="1">{
+                        switch key </span>{
+                        case "version":<span class="cov8" title="1">
+                                if str, ok := value.(string); ok </span><span class="cov8" title="1">{
+                                        dependency.Version = str
+                                }</span>
+                        case "hosted":<span class="cov0" title="0">
+                                if str, ok := value.(string); ok </span><span class="cov0" title="0">{
+                                        dependency.Hosted = str
+                                }</span>
+                        case "git":<span class="cov8" title="1">
+                                if gitMap, ok := value.(map[string]interface{}); ok </span><span class="cov8" title="1">{
+                                        git := &amp;domain.GitDependency{}
+                                        if url, ok := gitMap["url"].(string); ok </span><span class="cov8" title="1">{
+                                                git.URL = url
+                                        }</span>
+                                        <span class="cov8" title="1">if ref, ok := gitMap["ref"].(string); ok </span><span class="cov8" title="1">{
+                                                git.Ref = ref
+                                        }</span>
+                                        <span class="cov8" title="1">if path, ok := gitMap["path"].(string); ok </span><span class="cov0" title="0">{
+                                                git.Path = path
+                                        }</span>
+                                        <span class="cov8" title="1">dependency.Git = git</span>
+                                }
+                        case "path":<span class="cov8" title="1">
+                                if str, ok := value.(string); ok </span><span class="cov8" title="1">{
+                                        dependency.Path = str
+                                }</span>
+                        case "sdk":<span class="cov8" title="1">
+                                if str, ok := value.(string); ok </span><span class="cov8" title="1">{
+                                        dependency.SDK = str
+                                }</span>
+                        default:<span class="cov8" title="1">
+                                dependency.Extra[key] = value</span>
+                        }
+                }
+
+                <span class="cov8" title="1">return dependency, nil</span>
+        default:<span class="cov0" title="0">
+                return nil, fmt.Errorf("unsupported dependency format for %s", name)</span>
+        }
+}
+
+// isValidPackageName checks if package name follows pub.dev conventions
+func isValidPackageName(name string) bool <span class="cov8" title="1">{
+        if len(name) == 0 || len(name) &gt; 64 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        // Must start with letter or underscore
+        <span class="cov8" title="1">first := name[0]
+        if (first &lt; 'a' || first &gt; 'z') &amp;&amp; (first &lt; 'A' || first &gt; 'Z') &amp;&amp; first != '_' </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        // Can contain letters, numbers, underscores
+        <span class="cov8" title="1">for _, char := range name </span><span class="cov8" title="1">{
+                if (char &lt; 'a' || char &gt; 'z') &amp;&amp; (char &lt; 'A' || char &gt; 'Z') &amp;&amp; (char &lt; '0' || char &gt; '9') &amp;&amp; char != '_' </span><span class="cov8" title="1">{
+                        return false
+                }</span>
+        }
+
+        <span class="cov8" title="1">return true</span>
+}
+
+// isValidVersion checks basic semantic versioning format
+func isValidVersion(version string) bool <span class="cov8" title="1">{
+        if len(version) == 0 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        // Basic check for semantic versioning pattern - needs at least 3 parts (major.minor.patch)
+        <span class="cov8" title="1">parts := strings.Split(version, ".")
+        if len(parts) &lt; 3 </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        // Check each part is numeric (simplified check)
+        <span class="cov8" title="1">for _, part := range parts </span><span class="cov8" title="1">{
+                if len(part) == 0 </span><span class="cov0" title="0">{
+                        return false
+                }</span>
+                // Allow pre-release and build metadata
+                <span class="cov8" title="1">if strings.Contains(part, "-") || strings.Contains(part, "+") </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                // Check if part starts with digit
+                <span class="cov8" title="1">if part[0] &lt; '0' || part[0] &gt; '9' </span><span class="cov8" title="1">{
+                        return false
+                }</span>
+        }
+
+        <span class="cov8" title="1">return true</span>
+}</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

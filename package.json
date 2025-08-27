@@ -1,0 +1,14 @@
+{
+  "name": "repub",
+  "version": "1.0.0",
+  "description": "Go Pub Server with Tailwind CSS",
+  "scripts": {
+    "build-css": "tailwindcss -i ./web/styles/input.css -o ./web/static/styles.css --watch",
+    "build-css-prod": "tailwindcss -i ./web/styles/input.css -o ./web/static/styles.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10"
+  }
+}

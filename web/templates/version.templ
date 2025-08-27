@@ -1,0 +1,42 @@
+package templates
+
+templ VersionDetail(packageName, version string) {
+	@Base(packageName + " " + version, VersionDetailContent(packageName, version))
+}
+
+templ VersionDetailContent(packageName, version string) {
+	<div class="space-y-6">
+		<div class="package-card">
+			<div class="flex items-center justify-between mb-4">
+				<div>
+					<h2 class="text-3xl font-bold text-gray-800">{ packageName }</h2>
+					<div class="package-version mt-2">
+						Version: { version }
+					</div>
+				</div>
+			</div>
+			<nav>
+				<a href={ templ.URL("/packages/" + packageName) } 
+				   class="text-pub-blue hover:text-pub-blue-dark font-medium inline-flex items-center">
+					← Back to package
+				</a>
+			</nav>
+		</div>
+		
+		<div class="package-card">
+			<h3 class="text-xl font-semibold mb-4 text-gray-800">Installation</h3>
+			<div class="bg-gray-100 rounded-lg p-4">
+				<pre class="text-sm"><code class="text-gray-800">dependencies:
+  { packageName }: ^{ version }</code></pre>
+			</div>
+		</div>
+		
+		<div class="package-card">
+			<h3 class="text-xl font-semibold mb-4 text-gray-800">Download</h3>
+			<a href={ templ.URL("/packages/" + packageName + "/versions/" + version + ".tar.gz") } 
+			   class="btn-primary inline-block">
+				Download Archive
+			</a>
+		</div>
+	</div>
+}

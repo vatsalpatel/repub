@@ -1,0 +1,16 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "hello_world",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    }
+  ],
+  "generator": "pub",
+  "generatorVersion": "3.8.1",
+  "flutterRoot": "file:///Users/rjm/fvm/versions/stable",
+  "flutterVersion": "3.32.8",
+  "pubCache": "file:///Users/rjm/.pub-cache"
+}

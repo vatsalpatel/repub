@@ -1,0 +1,1 @@
+{"session_id":"1a0bc1c6-9ab2-40b7-b556-61462f011dda","transcript_path":"/Users/rjm/.claude/projects/-Users-rjm-Coding-Personal-repub/1a0bc1c6-9ab2-40b7-b556-61462f011dda.jsonl","cwd":"/Users/rjm/Coding/Personal/repub/tests","hook_event_name":"Notification","message":"Claude needs your permission to use Bash"}

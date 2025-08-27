@@ -1,0 +1,123 @@
+package templates
+
+templ Base(title string, content templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-full">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta name="description" content="Repub - A self-hosted Dart package repository"/>
+			<title>{ title } - Repub</title>
+			<link href="/static/styles.css" rel="stylesheet"/>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+			<style>
+			body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+		</style>
+		</head>
+		<body class="h-full bg-gradient-to-br from-gray-50 via-white to-blue-50 antialiased flex flex-col">
+			<!-- Header -->
+			<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200/60 shadow-sm">
+				<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div class="flex justify-between items-center h-16">
+						<div class="flex items-center space-x-3">
+							<a href="/" class="flex items-center space-x-3 group">
+								<div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+									<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8v2m0 0V3m0 2h2m-2 0H8"></path>
+									</svg>
+								</div>
+								<div class="flex flex-col">
+									<h1 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Repub</h1>
+									<p class="text-xs text-gray-500 -mt-0.5">Package Repository</p>
+								</div>
+							</a>
+						</div>
+						<nav class="hidden md:flex items-center space-x-1">
+							<a href="/" class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+								<span class="flex items-center space-x-2">
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+									</svg>
+									<span>Home</span>
+								</span>
+							</a>
+							<a href="/packages" class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+								<span class="flex items-center space-x-2">
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+									</svg>
+									<span>Packages</span>
+								</span>
+							</a>
+						</nav>
+						<!-- Mobile menu button -->
+						<div class="md:hidden">
+							<button type="button" class="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-2 rounded-lg transition-colors">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+								</svg>
+							</button>
+						</div>
+					</div>
+				</div>
+			</header>
+			<!-- Main Content -->
+			<main class="flex-1">
+				@content
+			</main>
+			<!-- Footer -->
+			<footer class="bg-gray-900 text-white mt-20">
+				<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+					<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+						<div class="md:col-span-2">
+							<div class="flex items-center space-x-3 mb-4">
+								<div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+									<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8v2m0 0V3m0 2h2m-2 0H8"></path>
+									</svg>
+								</div>
+								<h3 class="text-lg font-bold">Repub</h3>
+							</div>
+							<p class="text-gray-400 mb-4 max-w-md">
+								A self-hosted Dart package repository. Fast, reliable, and fully compatible with pub.dev.
+							</p>
+							<p class="text-sm text-gray-500">
+								Built with ❤️ for the Dart community
+							</p>
+						</div>
+						<div>
+							<h4 class="text-sm font-semibold uppercase tracking-wider mb-4 text-gray-300">Resources</h4>
+							<ul class="space-y-2">
+								<li><a href="/packages" class="text-gray-400 hover:text-white transition-colors text-sm">Browse Packages</a></li>
+								<li><a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Documentation</a></li>
+								<li><a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">API Reference</a></li>
+							</ul>
+						</div>
+						<div>
+							<h4 class="text-sm font-semibold uppercase tracking-wider mb-4 text-gray-300">Support</h4>
+							<ul class="space-y-2">
+								<li><a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Help Center</a></li>
+								<li><a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">GitHub</a></li>
+								<li><a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Issues</a></li>
+							</ul>
+						</div>
+					</div>
+					<div class="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
+						<p class="text-sm text-gray-400">
+							© 2024 Repub. Open source package repository.
+						</p>
+						<div class="flex space-x-4 mt-4 sm:mt-0">
+							<a href="#" class="text-gray-400 hover:text-white transition-colors">
+								<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+									<path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+								</svg>
+							</a>
+						</div>
+					</div>
+				</div>
+			</footer>
+		</body>
+	</html>
+}

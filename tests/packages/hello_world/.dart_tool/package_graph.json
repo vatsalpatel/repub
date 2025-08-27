@@ -1,0 +1,14 @@
+{
+  "roots": [
+    "hello_world"
+  ],
+  "packages": [
+    {
+      "name": "hello_world",
+      "version": "1.0.0",
+      "dependencies": [],
+      "devDependencies": []
+    }
+  ],
+  "configVersion": 1
+}

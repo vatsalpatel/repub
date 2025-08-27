@@ -1,0 +1,168 @@
+package templates
+
+import "repub/internal/domain"
+import "fmt"
+
+templ PackageDetail(detail *domain.PackageDetail) {
+	@Base(detail.Package.Name, PackageDetailContent(detail))
+}
+
+templ PackageDetailContent(detail *domain.PackageDetail) {
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<!-- Header -->
+		<div class="mb-8">
+			<div class="flex items-start justify-between">
+				<div class="flex items-center space-x-4">
+					<div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+						<span class="text-white text-xl font-bold">{ string(detail.Package.Name[0]) }</span>
+					</div>
+					<div>
+						<h1 class="text-3xl font-bold text-gray-900">{ detail.Package.Name }</h1>
+						<p class="text-lg text-gray-600 mt-1">{ detail.Latest.Version }</p>
+						
+						<!-- Pub status badges -->
+						<div class="flex items-center space-x-2 mt-2">
+							<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+								✓ Published
+							</span>
+							<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+								Self-hosted
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Description -->
+			if detail.Package.Description != nil {
+				<p class="text-gray-700 mt-4 text-lg leading-relaxed">{ *detail.Package.Description }</p>
+			}
+		</div>
+
+		<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+			<!-- Main content -->
+			<div class="lg:col-span-3 space-y-8">
+				<!-- Tabs -->
+				<div class="border-b border-gray-200">
+					<nav class="-mb-px flex space-x-8">
+						<a href="#" class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+							Readme
+						</a>
+						<a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+							Changelog
+						</a>
+						<a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+							Installing
+						</a>
+						<a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+							Versions
+						</a>
+					</nav>
+				</div>
+
+				<!-- Readme content -->
+				<div class="prose prose-gray max-w-none">
+					if detail.Latest.Readme != nil && *detail.Latest.Readme != "" {
+						<div class="bg-white border border-gray-200 rounded-lg p-6">
+							@templ.Raw(RenderMarkdown(*detail.Latest.Readme))
+						</div>
+					} else {
+						<div class="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+							<p class="text-gray-500">No README available</p>
+						</div>
+					}
+				</div>
+			</div>
+
+			<!-- Sidebar -->
+			<div class="lg:col-span-1 space-y-6">
+				<!-- Stats -->
+				<div class="bg-white border border-gray-200 rounded-lg p-6">
+					<div class="space-y-4">
+						<div class="text-center">
+							<div class="text-2xl font-bold text-blue-600">{ fmt.Sprintf("%.1fk", float64(detail.TotalDownloads)/1000) }</div>
+							<div class="text-sm text-gray-500 uppercase tracking-wide">Downloads</div>
+						</div>
+						<div class="text-center">
+							<div class="text-2xl font-bold text-blue-600">{ fmt.Sprintf("%d", len(detail.Versions)) }</div>
+							<div class="text-sm text-gray-500 uppercase tracking-wide">Versions</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Publisher -->
+				if detail.Latest.Uploader != nil {
+					<div class="bg-white border border-gray-200 rounded-lg p-6">
+						<h3 class="text-sm font-medium text-gray-900 mb-3">Publisher</h3>
+						<div class="flex items-center space-x-2">
+							<div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+								<span class="text-xs font-medium text-gray-700">{ string((*detail.Latest.Uploader)[0]) }</span>
+							</div>
+							<span class="text-sm text-gray-900">{ *detail.Latest.Uploader }</span>
+						</div>
+					</div>
+				}
+
+				<!-- Metadata -->
+				<div class="bg-white border border-gray-200 rounded-lg p-6">
+					<h3 class="text-sm font-medium text-gray-900 mb-4">Metadata</h3>
+					<div class="space-y-3 text-sm">
+						if detail.Package.Homepage != nil {
+							<div>
+								<span class="text-gray-500">Homepage</span>
+								<div>
+									<a href={ templ.URL(*detail.Package.Homepage) } class="text-blue-600 hover:text-blue-800 break-all">
+										{ *detail.Package.Homepage }
+									</a>
+								</div>
+							</div>
+						}
+						if detail.Package.Repository != nil {
+							<div>
+								<span class="text-gray-500">Repository</span>
+								<div>
+									<a href={ templ.URL(*detail.Package.Repository) } class="text-blue-600 hover:text-blue-800 break-all">
+										{ *detail.Package.Repository }
+									</a>
+								</div>
+							</div>
+						}
+						if detail.Package.Documentation != nil {
+							<div>
+								<span class="text-gray-500">Documentation</span>
+								<div>
+									<a href={ templ.URL(*detail.Package.Documentation) } class="text-blue-600 hover:text-blue-800 break-all">
+										{ *detail.Package.Documentation }
+									</a>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+
+				<!-- Topics -->
+				if len(detail.Package.Topics) > 0 {
+					<div class="bg-white border border-gray-200 rounded-lg p-6">
+						<h3 class="text-sm font-medium text-gray-900 mb-3">Topics</h3>
+						<div class="flex flex-wrap gap-2">
+							for _, topic := range detail.Package.Topics {
+								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+									#{ topic }
+								</span>
+							}
+						</div>
+					</div>
+				}
+
+				<!-- Installation -->
+				<div class="bg-white border border-gray-200 rounded-lg p-6">
+					<h3 class="text-sm font-medium text-gray-900 mb-3">Installation</h3>
+					<div class="bg-gray-50 rounded-md p-3">
+						<pre class="text-xs text-gray-800"><code>dependencies:
+  { detail.Package.Name }: ^{ detail.Latest.Version }</code></pre>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}

@@ -1,0 +1,14 @@
+{
+  "roots": [
+    "math_utils"
+  ],
+  "packages": [
+    {
+      "name": "math_utils",
+      "version": "1.2.0",
+      "dependencies": [],
+      "devDependencies": []
+    }
+  ],
+  "configVersion": 1
+}

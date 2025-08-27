@@ -1,0 +1,40 @@
+# Git and version control
+.git
+.gitignore
+
+# Build artifacts
+tmp/
+coverage.out
+server
+*.log
+build-errors.log
+
+# Testing
+testdata/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Node modules (if any)
+node_modules/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Vendor (if using go modules, this is not needed)
+vendor/
+
+# Unpub reference implementation (not needed in container)
+unpub/
+
+
+
