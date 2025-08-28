@@ -72,15 +72,18 @@ func setupRouter(pubSvc service.PubService, authSvc service.AuthService) *chi.Mu
 	r.Use(middleware.RequestID)
 	r.Use(authmiddleware.OptionalAuth(authSvc))
 
-	// API routes - all protected with read tokens minimum
+	// API routes
 	r.Route("/api", func(r chi.Router) {
-		r.Use(authmiddleware.RequireAuthMiddleware(authSvc, false)) // false = read access sufficient for all API routes
 		r.Route("/packages", func(r chi.Router) {
-			r.Get("/{package}", handlers.GetPackageHandler(pubSvc))
-			r.Get("/{package}/versions/{version}", handlers.GetPackageVersionHandler(pubSvc))
-			r.Get("/{package}/advisories", handlers.GetAdvisoriesHandler(pubSvc))
+			// Read-only routes (require read tokens)
+			r.Group(func(r chi.Router) {
+				r.Use(authmiddleware.RequireAuthMiddleware(authSvc, false)) // false = read access sufficient
+				r.Get("/{package}", handlers.GetPackageHandler(pubSvc))
+				r.Get("/{package}/versions/{version}", handlers.GetPackageVersionHandler(pubSvc))
+				r.Get("/{package}/advisories", handlers.GetAdvisoriesHandler(pubSvc))
+			})
 
-			// Protected publishing routes (require write tokens)
+			// Write routes (require write tokens)
 			r.Group(func(r chi.Router) {
 				r.Use(authmiddleware.RequireAuthMiddleware(authSvc, true)) // true = write required
 				r.Get("/versions/new", handlers.NewPackageVersionHandler(pubSvc))
