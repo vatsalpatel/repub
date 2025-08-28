@@ -1,5 +1,5 @@
 -- name: CreatePackage :one
-cumentation)
+INSERT INTO packages (name, private, description, homepage, repository, documentation)
 VALUES (?, ?, ?, ?, ?, ?)
 RETURNING id, name, private, description, homepage, repository, documentation, created_at, updated_at;
 
