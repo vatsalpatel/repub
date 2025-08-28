@@ -13,5 +13,5 @@ spec:
       match: Host(`{{ required "A domain must be provided" .Values.domain }}`)
       services:
         - name: repub
-          port: rest
+          port: 80
           scheme: http

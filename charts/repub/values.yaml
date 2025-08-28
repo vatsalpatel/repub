@@ -1,9 +1,11 @@
 environ:
   DATABASE_URL: postgres://repub:repub@repub-postgres:5432/repub?sslmode=disable
-  AUTH_TOKEN: qwerty
+  WRITE_TOKEN_ADMIN: admin54321
+  READ_TOKEN_PUBLIC: readonly54321
   PORT: 80
   BASE_URL: http://localhost:80
   LOG_LEVEL: INFO
+  STORAGE_PATH: /app/storage
 
 image:
   repository: ghcr.io
@@ -18,3 +20,18 @@ autoscaling:
   targetMemoryUtilizationPercentage: 80
 
 domain: repub.dev
+
+persistence:
+  enabled: true
+  claimName: repub-storage-pvc
+  size: 10Gi
+  mountPath: /app/storage
+  accessModes:
+    - ReadWriteOnce
+  # storageClass: ""  # Use default storage class
+
+# Optional: Additional volumes beyond the default persistence volume
+additionalVolumes: []
+
+# Optional: Additional volumeMounts beyond the default persistence mount
+additionalVolumeMounts: []
