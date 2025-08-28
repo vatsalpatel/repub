@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"repub/internal/service"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -101,12 +102,13 @@ func DownloadPackageHandler(pubSvc service.PubService) http.HandlerFunc {
 func NewPackageVersionHandler(pubSvc service.PubService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// According to pub protocol, this endpoint should return upload URL and fields
-		// Use the scheme from the original request URL
-		scheme := "http"
-		if r.URL.Scheme != "" {
-			scheme = r.URL.Scheme
+		// Default to https, use http only for localhost
+		scheme := "https"
+		if strings.Contains(r.Host, "localhost") || strings.Contains(r.Host, "127.0.0.1") {
+			scheme = "http"
 		}
 		baseURL := fmt.Sprintf("%s://%s", scheme, r.Host)
+		slog.Info("Base URL", "url", baseURL)
 
 		response := map[string]interface{}{
 			"url":    baseURL + "/api/packages/versions/new",
