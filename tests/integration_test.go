@@ -59,9 +59,14 @@ func TestIntegration(t *testing.T) {
 		testWebInterface(t)
 	})
 
-	// Test package installation
-	t.Run("install and use packages", func(t *testing.T) {
-		testPackageInstallation(t)
+	// Test package installation - should pass with our published packages
+	t.Run("install published packages", func(t *testing.T) {
+		testPackageInstallation(t, false) // false = don't include test package
+	})
+	
+	// Test package installation failure - should fail with missing package
+	t.Run("fail to install missing package", func(t *testing.T) {
+		testPackageInstallationFailure(t) // This should fail as expected
 	})
 }
 
@@ -282,7 +287,7 @@ func testWebInterface(t *testing.T) {
 	t.Log("✅ Web interface tests passed")
 }
 
-func testPackageInstallation(t *testing.T) {
+func testPackageInstallation(t *testing.T, includeTestPackage bool) {
 	t.Helper()
 	
 	// Create a temporary test project
@@ -326,11 +331,16 @@ environment:
 
 dependencies:
   hello_world: ^1.0.0
-  math_utils: ^1.2.0
+  math_utils: ^1.2.0`
+
+	if includeTestPackage {
+		pubspecContent += `
 
 dev_dependencies:
-  test: ^1.24.0
-`
+  test: ^1.24.0`
+	}
+
+	pubspecContent += "\n"
 
 	if err := os.WriteFile("pubspec.yaml", []byte(pubspecContent), 0644); err != nil {
 		t.Fatalf("Failed to write test pubspec.yaml: %v", err)
@@ -390,6 +400,87 @@ void main() {
 		t.Log("✅ Successfully ran test program using hosted packages")
 		t.Logf("Program output: %s", output)
 	}
+}
+
+func testPackageInstallationFailure(t *testing.T) {
+	t.Helper()
+	
+	// Create a temporary test project
+	testProject := t.TempDir()
+	
+	// Change to test project directory
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore working directory: %v", err)
+		}
+	}()
+	
+	if err := os.Chdir(testProject); err != nil {
+		t.Fatalf("Failed to change to test project directory: %v", err)
+	}
+
+	t.Log("📝 Creating test Dart project with missing package...")
+	
+	cmd := exec.Command("dart", "create", "test_failure")
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("Failed to create Dart project: %v", err)
+	}
+	
+	if err := os.Chdir("test_failure"); err != nil {
+		t.Fatalf("Failed to change to test_failure directory: %v", err)
+	}
+
+	// Create pubspec.yaml that includes a package that doesn't exist on our server
+	pubspecContent := `name: test_failure
+description: A test project that should fail to resolve dependencies.
+version: 1.0.0
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  hello_world: ^1.0.0
+  nonexistent_package: ^1.0.0
+`
+
+	if err := os.WriteFile("pubspec.yaml", []byte(pubspecContent), 0644); err != nil {
+		t.Fatalf("Failed to write test pubspec.yaml: %v", err)
+	}
+
+	// Create .dart_tool/package_config.json to point to our server
+	if err := os.MkdirAll(".dart_tool", 0755); err != nil {
+		t.Fatalf("Failed to create .dart_tool directory: %v", err)
+	}
+	
+	packageConfigContent := fmt.Sprintf(`{
+  "configVersion": 2,
+  "packages": [],
+  "generated": "%s",
+  "generator": "pub",
+  "generatorVersion": "3.0.0"
+}`, time.Now().Format(time.RFC3339))
+
+	if err := os.WriteFile(".dart_tool/package_config.json", []byte(packageConfigContent), 0644); err != nil {
+		t.Fatalf("Failed to write package_config.json: %v", err)
+	}
+
+	t.Log("📥 Attempting to install dependencies (this should fail)...")
+
+	// Run pub get with our hosted server - this should fail
+	cmd = exec.Command("dart", "pub", "get")
+	cmd.Env = append(os.Environ(), "PUB_HOSTED_URL="+serverURL)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Logf("✅ pub get failed as expected: %v\nOutput: %s", err, output)
+		return // This is the expected behavior
+	}
+	
+	// If we get here, the test should fail because it succeeded when it should have failed
+	t.Fatalf("Expected pub get to fail with missing package, but it succeeded. Output: %s", output)
 }
 
 func TestCleanup(t *testing.T) {
