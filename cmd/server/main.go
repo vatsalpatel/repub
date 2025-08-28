@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 	"repub/internal/config"
-	"repub/internal/db/postgres"
 	"repub/internal/handlers"
 	"repub/internal/repository/pkg"
+	"repub/internal/repository/pkg/postgres"
 	"repub/internal/repository/pubspec"
 	"repub/internal/repository/storage"
 	"repub/internal/service"
@@ -51,7 +51,7 @@ func main() {
 		Pubspec: pubspecRepo,
 		Port:    cfg.Port,
 	})
-	authSvc := service.NewAuthService(cfg.AuthToken)
+	authSvc := service.NewAuthService(cfg.ReadTokens, cfg.WriteTokens)
 
 	// Setup router
 	r := setupRouter(pubSvc, authSvc)
@@ -78,9 +78,9 @@ func setupRouter(pubSvc service.PubService, authSvc service.AuthService) *chi.Mu
 			r.Get("/{package}/versions/{version}", handlers.GetPackageVersionHandler(pubSvc))
 			r.Get("/{package}/advisories", handlers.GetAdvisoriesHandler(pubSvc))
 
-			// Protected publishing routes
+			// Protected publishing routes (require write tokens)
 			r.Group(func(r chi.Router) {
-				r.Use(RequireAuthMiddleware(authSvc))
+				r.Use(RequireAuthMiddleware(authSvc, true)) // true = write required
 				r.Get("/versions/new", handlers.NewPackageVersionHandler(pubSvc))
 				r.Post("/versions/new", handlers.UploadPackageHandler(pubSvc, cfg.BaseURL))
 				r.Get("/versions/newUploadFinish", handlers.FinalizeUploadHandler(pubSvc))

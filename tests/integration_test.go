@@ -91,7 +91,7 @@ func startTestServer(t *testing.T) (*exec.Cmd, context.CancelFunc) {
 	serverCmd := exec.CommandContext(ctx, "./repub-test")
 	serverCmd.Dir = ".."
 	serverCmd.Env = append(os.Environ(),
-		"AUTH_TOKEN="+authToken,
+		"WRITE_TOKEN_INTEGRATION="+authToken,
 		"PORT="+serverPort,
 		"BASE_URL="+serverURL,
 		"DATABASE_URL=postgres://repub:repub@localhost:15432/repub?sslmode=disable",

@@ -2,8 +2,8 @@ package pkg
 
 import (
 	"context"
-	"repub/internal/db/postgres"
 	"repub/internal/domain"
+	"repub/internal/repository/pkg/postgres"
 )
 
 type Queries interface {

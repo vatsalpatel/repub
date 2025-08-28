@@ -3,8 +3,8 @@ package pkg
 import (
 	"context"
 	"database/sql"
-	"repub/internal/db/postgres"
 	"repub/internal/domain"
+	"repub/internal/repository/pkg/postgres"
 )
 
 type postgresPackageRepository struct {

@@ -8,9 +8,10 @@
       "languageVersion": "3.0"
     }
   ],
+  "generated": "2025-08-28T05:05:23.906542Z",
   "generator": "pub",
-  "generatorVersion": "3.8.1",
-  "flutterRoot": "file:///Users/rjm/fvm/versions/stable",
-  "flutterVersion": "3.32.8",
-  "pubCache": "file:///Users/rjm/.pub-cache"
+  "generatorVersion": "3.7.2",
+  "flutterRoot": "file:///opt/homebrew/Caskroom/flutter/3.29.2/flutter",
+  "flutterVersion": "3.29.2",
+  "pubCache": "file:///var/folders/lb/mhx7m52d6_z20j1wfttm_qyh0000gn/T/TestIntegration4133846340/001"
 }
