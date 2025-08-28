@@ -71,8 +71,9 @@ func setupRouter(pubSvc service.PubService, authSvc service.AuthService) *chi.Mu
 	r.Use(middleware.RequestID)
 	r.Use(OptionalAuth(authSvc))
 
-	// API routes
+	// API routes - all protected with read tokens minimum
 	r.Route("/api", func(r chi.Router) {
+		r.Use(RequireAuthMiddleware(authSvc, false)) // false = read access sufficient for all API routes
 		r.Route("/packages", func(r chi.Router) {
 			r.Get("/{package}", handlers.GetPackageHandler(pubSvc))
 			r.Get("/{package}/versions/{version}", handlers.GetPackageVersionHandler(pubSvc))
