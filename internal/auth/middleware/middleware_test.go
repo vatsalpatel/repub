@@ -1,10 +1,11 @@
-package main
+package middleware_test
 
 import (
 	"context"
 	"net/http"
 	"net/http/httptest"
 	"repub/internal/auth"
+	"repub/internal/auth/middleware"
 	"repub/internal/config"
 	"repub/internal/service"
 	"testing"
@@ -20,7 +21,7 @@ func TestRequireReadAuthMiddleware(t *testing.T) {
 	authSvc := service.NewAuthService(readTokens, writeTokens)
 
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if IsAuthenticated(r.Context()) {
+		if middleware.IsAuthenticated(r.Context()) {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("authenticated"))
 		} else {
@@ -29,7 +30,7 @@ func TestRequireReadAuthMiddleware(t *testing.T) {
 		}
 	})
 
-	middleware := RequireAuthMiddleware(authSvc, false)
+	middleware := middleware.RequireAuthMiddleware(authSvc, false)
 	handler := middleware(testHandler)
 
 	tests := []struct {
@@ -102,7 +103,7 @@ func TestRequireWriteAuthMiddleware(t *testing.T) {
 	authSvc := service.NewAuthService(readTokens, writeTokens)
 
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if IsAuthenticated(r.Context()) {
+		if middleware.IsAuthenticated(r.Context()) {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("authenticated"))
 		} else {
@@ -111,7 +112,7 @@ func TestRequireWriteAuthMiddleware(t *testing.T) {
 		}
 	})
 
-	middleware := RequireAuthMiddleware(authSvc, true)
+	middleware := middleware.RequireAuthMiddleware(authSvc, true)
 	handler := middleware(testHandler)
 
 	tests := []struct {
@@ -177,8 +178,8 @@ func TestRequireAuth(t *testing.T) {
 	}
 	authSvc := service.NewAuthService(readTokens, writeTokens)
 
-	handler := RequireAuth(authSvc, func(w http.ResponseWriter, r *http.Request) {
-		if !IsAuthenticated(r.Context()) {
+	handler := middleware.RequireAuth(authSvc, func(w http.ResponseWriter, r *http.Request) {
+		if !middleware.IsAuthenticated(r.Context()) {
 			t.Error("Expected authentication in context")
 		}
 		w.WriteHeader(http.StatusOK)
@@ -218,7 +219,7 @@ func TestOptionalAuth(t *testing.T) {
 	authSvc := service.NewAuthService(readTokens, writeTokens)
 
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if IsAuthenticated(r.Context()) {
+		if middleware.IsAuthenticated(r.Context()) {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("authenticated"))
 		} else {
@@ -227,7 +228,7 @@ func TestOptionalAuth(t *testing.T) {
 		}
 	})
 
-	middleware := OptionalAuth(authSvc)
+	middleware := middleware.OptionalAuth(authSvc)
 	handler := middleware(testHandler)
 
 	tests := []struct {
@@ -283,21 +284,21 @@ func TestIsAuthenticated(t *testing.T) {
 	// Test with authenticated context
 	ctx := auth.SetAuthenticated(context.Background(), true)
 
-	authenticated := IsAuthenticated(ctx)
+	authenticated := middleware.IsAuthenticated(ctx)
 	if !authenticated {
 		t.Error("Expected authenticated context to return true")
 	}
 
 	// Test with unauthenticated context
 	unauthCtx := auth.SetAuthenticated(context.Background(), false)
-	authenticated = IsAuthenticated(unauthCtx)
+	authenticated = middleware.IsAuthenticated(unauthCtx)
 	if authenticated {
 		t.Error("Expected unauthenticated context to return false")
 	}
 
 	// Test with no authentication in context
 	emptyCtx := context.Background()
-	authenticated = IsAuthenticated(emptyCtx)
+	authenticated = middleware.IsAuthenticated(emptyCtx)
 	if authenticated {
 		t.Error("Expected empty context to return false")
 	}
