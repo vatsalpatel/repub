@@ -3,8 +3,8 @@ package pkg
 import (
 	"context"
 	"database/sql"
-	"repub/internal/db/postgres"
 	"repub/internal/domain"
+	"repub/internal/repository/pkg/postgres"
 	"testing"
 	"time"
 
@@ -357,5 +357,3 @@ func TestNullStringToPtr(t *testing.T) {
 		t.Error("Expected nil for null string")
 	}
 }
-
-

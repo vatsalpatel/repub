@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"repub/internal/db/sqlite"
 	"repub/internal/domain"
+	"repub/internal/repository/pkg/sqlite"
 )
 
 // sqlitePackageRepository implements pkg.Repository using SQLite

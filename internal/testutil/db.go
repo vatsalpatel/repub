@@ -8,9 +8,9 @@ import (
 	"database/sql"
 	"testing"
 
-	"repub/internal/db/sqlite"
 	"repub/internal/domain"
 	"repub/internal/repository/pkg"
+	"repub/internal/repository/pkg/sqlite"
 	"repub/internal/repository/pubspec"
 	"repub/internal/repository/storage"
 

@@ -8,7 +8,6 @@ require (
 	github.com/goccy/go-json v0.10.5
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.9
 	github.com/yuin/goldmark v1.7.13
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.34.4

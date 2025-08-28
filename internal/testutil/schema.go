@@ -5,7 +5,7 @@ import (
 	"embed"
 	"testing"
 
-	"repub/internal/db/sqlite"
+	"repub/internal/repository/pkg/sqlite"
 )
 
 //go:embed schema_sqlite.sql

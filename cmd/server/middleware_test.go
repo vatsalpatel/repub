@@ -5,12 +5,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"repub/internal/auth"
+	"repub/internal/config"
 	"repub/internal/service"
 	"testing"
 )
 
-func TestAuthMiddleware(t *testing.T) {
-	authSvc := service.NewAuthService("test-token")
+func TestRequireReadAuthMiddleware(t *testing.T) {
+	readTokens := []config.Token{
+		{Name: "READER", Value: "read-token"},
+	}
+	writeTokens := []config.Token{
+		{Name: "WRITER", Value: "write-token"},
+	}
+	authSvc := service.NewAuthService(readTokens, writeTokens)
 
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if IsAuthenticated(r.Context()) {
@@ -22,7 +29,7 @@ func TestAuthMiddleware(t *testing.T) {
 		}
 	})
 
-	middleware := AuthMiddleware(authSvc)
+	middleware := RequireAuthMiddleware(authSvc, false)
 	handler := middleware(testHandler)
 
 	tests := []struct {
@@ -32,8 +39,14 @@ func TestAuthMiddleware(t *testing.T) {
 		expectedBody   string
 	}{
 		{
-			name:           "valid token",
-			authHeader:     "Bearer test-token",
+			name:           "valid read token",
+			authHeader:     "Bearer read-token",
+			expectedStatus: http.StatusOK,
+			expectedBody:   "authenticated",
+		},
+		{
+			name:           "valid write token",
+			authHeader:     "Bearer write-token",
 			expectedStatus: http.StatusOK,
 			expectedBody:   "authenticated",
 		},
@@ -79,8 +92,90 @@ func TestAuthMiddleware(t *testing.T) {
 	}
 }
 
+func TestRequireWriteAuthMiddleware(t *testing.T) {
+	readTokens := []config.Token{
+		{Name: "READER", Value: "read-token"},
+	}
+	writeTokens := []config.Token{
+		{Name: "WRITER", Value: "write-token"},
+	}
+	authSvc := service.NewAuthService(readTokens, writeTokens)
+
+	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if IsAuthenticated(r.Context()) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("authenticated"))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte("not authenticated"))
+		}
+	})
+
+	middleware := RequireAuthMiddleware(authSvc, true)
+	handler := middleware(testHandler)
+
+	tests := []struct {
+		name           string
+		authHeader     string
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:           "valid write token",
+			authHeader:     "Bearer write-token",
+			expectedStatus: http.StatusOK,
+			expectedBody:   "authenticated",
+		},
+		{
+			name:           "read token cannot write",
+			authHeader:     "Bearer read-token",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   "Unauthorized",
+		},
+		{
+			name:           "invalid token",
+			authHeader:     "Bearer invalid-token",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   "Unauthorized",
+		},
+		{
+			name:           "no auth header",
+			authHeader:     "",
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   "Unauthorized",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/test", nil)
+			if tt.authHeader != "" {
+				req.Header.Set("Authorization", tt.authHeader)
+			}
+
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, req)
+
+			if w.Code != tt.expectedStatus {
+				t.Errorf("Expected status %d, got %d", tt.expectedStatus, w.Code)
+			}
+
+			body := w.Body.String()
+			if body != tt.expectedBody+"\n" && body != tt.expectedBody {
+				t.Errorf("Expected body %q, got %q", tt.expectedBody, body)
+			}
+		})
+	}
+}
+
 func TestRequireAuth(t *testing.T) {
-	authSvc := service.NewAuthService("test-token")
+	readTokens := []config.Token{
+		{Name: "READER", Value: "read-token"},
+	}
+	writeTokens := []config.Token{
+		{Name: "WRITER", Value: "write-token"},
+	}
+	authSvc := service.NewAuthService(readTokens, writeTokens)
 
 	handler := RequireAuth(authSvc, func(w http.ResponseWriter, r *http.Request) {
 		if !IsAuthenticated(r.Context()) {
@@ -90,9 +185,9 @@ func TestRequireAuth(t *testing.T) {
 		_, _ = w.Write([]byte("success"))
 	})
 
-	// Test with valid token
+	// Test with valid read token
 	req := httptest.NewRequest("GET", "/test", nil)
-	req.Header.Set("Authorization", "Bearer test-token")
+	req.Header.Set("Authorization", "Bearer read-token")
 	w := httptest.NewRecorder()
 
 	handler(w, req)
@@ -114,7 +209,13 @@ func TestRequireAuth(t *testing.T) {
 }
 
 func TestOptionalAuth(t *testing.T) {
-	authSvc := service.NewAuthService("test-token")
+	readTokens := []config.Token{
+		{Name: "READER", Value: "read-token"},
+	}
+	writeTokens := []config.Token{
+		{Name: "WRITER", Value: "write-token"},
+	}
+	authSvc := service.NewAuthService(readTokens, writeTokens)
 
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if IsAuthenticated(r.Context()) {
@@ -135,8 +236,13 @@ func TestOptionalAuth(t *testing.T) {
 		expectedBody string
 	}{
 		{
-			name:         "valid token",
-			authHeader:   "Bearer test-token",
+			name:         "valid read token",
+			authHeader:   "Bearer read-token",
+			expectedBody: "authenticated",
+		},
+		{
+			name:         "valid write token",
+			authHeader:   "Bearer write-token",
 			expectedBody: "authenticated",
 		},
 		{
@@ -196,4 +302,3 @@ func TestIsAuthenticated(t *testing.T) {
 		t.Error("Expected empty context to return false")
 	}
 }
-
