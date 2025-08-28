@@ -1,4 +1,4 @@
-package main
+package middleware
 
 import (
 	"context"
@@ -8,21 +8,20 @@ import (
 	"repub/internal/service"
 )
 
-
 // RequireAuthMiddleware creates middleware that requires authentication
 // writeRequired: if true, requires write tokens; if false, accepts read or write tokens
 func RequireAuthMiddleware(authSvc service.AuthService, writeRequired bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
-			
+
 			var err error
 			if writeRequired {
 				err = authSvc.AuthenticateWriteRequest(r.Context(), authHeader)
 			} else {
 				err = authSvc.AuthenticateReadRequest(r.Context(), authHeader)
 			}
-			
+
 			if err != nil {
 				authType := "read"
 				if writeRequired {
@@ -57,7 +56,7 @@ func OptionalAuth(authSvc service.AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
-			
+
 			if authHeader != "" {
 				err := authSvc.AuthenticateReadRequest(r.Context(), authHeader)
 				if err == nil {

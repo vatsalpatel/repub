@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	authmiddleware "repub/internal/auth/middleware"
 	"repub/internal/config"
 	"repub/internal/handlers"
 	"repub/internal/repository/pkg"
@@ -69,11 +70,11 @@ func setupRouter(pubSvc service.PubService, authSvc service.AuthService) *chi.Mu
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.RequestID)
-	r.Use(OptionalAuth(authSvc))
+	r.Use(authmiddleware.OptionalAuth(authSvc))
 
 	// API routes - all protected with read tokens minimum
 	r.Route("/api", func(r chi.Router) {
-		r.Use(RequireAuthMiddleware(authSvc, false)) // false = read access sufficient for all API routes
+		r.Use(authmiddleware.RequireAuthMiddleware(authSvc, false)) // false = read access sufficient for all API routes
 		r.Route("/packages", func(r chi.Router) {
 			r.Get("/{package}", handlers.GetPackageHandler(pubSvc))
 			r.Get("/{package}/versions/{version}", handlers.GetPackageVersionHandler(pubSvc))
@@ -81,7 +82,7 @@ func setupRouter(pubSvc service.PubService, authSvc service.AuthService) *chi.Mu
 
 			// Protected publishing routes (require write tokens)
 			r.Group(func(r chi.Router) {
-				r.Use(RequireAuthMiddleware(authSvc, true)) // true = write required
+				r.Use(authmiddleware.RequireAuthMiddleware(authSvc, true)) // true = write required
 				r.Get("/versions/new", handlers.NewPackageVersionHandler(pubSvc))
 				r.Post("/versions/new", handlers.UploadPackageHandler(pubSvc, cfg.BaseURL))
 				r.Get("/versions/newUploadFinish", handlers.FinalizeUploadHandler(pubSvc))
