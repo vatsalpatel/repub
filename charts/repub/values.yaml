@@ -1,7 +1,5 @@
 environ:
   DATABASE_URL: postgres://repub:repub@repub-postgres:5432/repub?sslmode=disable
-  WRITE_TOKEN_ADMIN: admin54321
-  READ_TOKEN_PUBLIC: readonly54321
   PORT: 80
   BASE_URL: http://localhost:80
   LOG_LEVEL: INFO
