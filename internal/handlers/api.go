@@ -90,7 +90,7 @@ func DownloadPackageHandler(pubSvc service.PubService) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", "attachment; filename=\""+packageName+"-"+version+".tar.gz\"")
-		
+
 		if _, err := w.Write(data); err != nil {
 			slog.Error("Failed to write download response", "error", err)
 		}
@@ -101,15 +101,15 @@ func DownloadPackageHandler(pubSvc service.PubService) http.HandlerFunc {
 func NewPackageVersionHandler(pubSvc service.PubService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// According to pub protocol, this endpoint should return upload URL and fields
-		// Build the absolute URL from the request
+		// Use the scheme from the original request URL
 		scheme := "http"
-		if r.TLS != nil {
-			scheme = "https"
+		if r.URL.Scheme != "" {
+			scheme = r.URL.Scheme
 		}
 		baseURL := fmt.Sprintf("%s://%s", scheme, r.Host)
-		
+
 		response := map[string]interface{}{
-			"url": baseURL + "/api/packages/versions/new",
+			"url":    baseURL + "/api/packages/versions/new",
 			"fields": map[string]string{},
 		}
 
