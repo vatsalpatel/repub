@@ -68,6 +68,11 @@ func TestIntegration(t *testing.T) {
 	t.Run("fail to install missing package", func(t *testing.T) {
 		testPackageInstallationFailure(t) // This should fail as expected
 	})
+
+	// Test mixed package sources - our repo + pub.dev
+	t.Run("install mixed packages (local + pub.dev)", func(t *testing.T) {
+		testMixedPackageInstallation(t) // Local packages + pub.dev fallback
+	})
 }
 
 func isDartAvailable() bool {
@@ -481,6 +486,128 @@ dependencies:
 	
 	// If we get here, the test should fail because it succeeded when it should have failed
 	t.Fatalf("Expected pub get to fail with missing package, but it succeeded. Output: %s", output)
+}
+
+func testMixedPackageInstallation(t *testing.T) {
+	t.Helper()
+	
+	// Create a temporary test project
+	testProject := t.TempDir()
+	
+	// Change to test project directory
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to restore working directory: %v", err)
+		}
+	}()
+	
+	if err := os.Chdir(testProject); err != nil {
+		t.Fatalf("Failed to change to test project directory: %v", err)
+	}
+
+	t.Log("📝 Creating test Dart project with mixed package sources...")
+	
+	cmd := exec.Command("dart", "create", "mixed_test")
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("Failed to create Dart project: %v", err)
+	}
+	
+	if err := os.Chdir("mixed_test"); err != nil {
+		t.Fatalf("Failed to change to mixed_test directory: %v", err)
+	}
+
+	// Create pubspec.yaml with mixed dependencies:
+	// - Our local packages (hello_world, math_utils) from our hosted server
+	// - One standard package from pub.dev (path - a common, stable package)
+	pubspecContent := `name: mixed_test
+description: A test project that uses both local and pub.dev packages.
+version: 1.0.0
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  # Local packages from our hosted server
+  hello_world:
+    version: ^1.0.0
+    hosted:
+      url: ` + serverURL + `
+      name: hello_world
+  math_utils:
+    version: ^1.2.0
+    hosted:
+      url: ` + serverURL + `
+      name: math_utils
+  
+  # Standard package from pub.dev
+  path: ^1.8.0
+`
+
+	if err := os.WriteFile("pubspec.yaml", []byte(pubspecContent), 0644); err != nil {
+		t.Fatalf("Failed to write mixed pubspec.yaml: %v", err)
+	}
+
+	t.Log("📥 Installing mixed dependencies (local + pub.dev)...")
+
+	// Run pub get without PUB_HOSTED_URL override - this allows:
+	// - Local packages to be fetched from our server (via hosted: url in pubspec)  
+	// - Standard packages to be fetched from pub.dev (default behavior)
+	cmd = exec.Command("dart", "pub", "get")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to install mixed packages: %v\nOutput: %s", err, output)
+	}
+	
+	t.Log("✅ Successfully installed mixed packages")
+	t.Logf("Pub get output: %s", output)
+
+	// Create a simple test file that uses packages from both sources
+	testFileContent := `import 'package:hello_world/hello_world.dart';
+import 'package:math_utils/math_utils.dart';
+import 'package:path/path.dart' as path;
+
+void main() {
+  // Use our local packages
+  print(helloWorld());
+  print('Is 17 prime? ${isPrime(17)}');
+  print('5! = ${factorial(5)}');
+  
+  // Use pub.dev package
+  var filePath = path.join('/tmp', 'example.txt');
+  print('Example path: $filePath');
+  print('Path extension: ${path.extension(filePath)}');
+}`
+
+	if err := os.WriteFile("bin/mixed_test.dart", []byte(testFileContent), 0644); err != nil {
+		t.Fatalf("Failed to write mixed test file: %v", err)
+	}
+
+	// Try to run the test program
+	t.Log("🚀 Running mixed package test program...")
+	cmd = exec.Command("dart", "run")
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to run mixed test program: %v\nOutput: %s", err, output)
+	}
+
+	t.Log("✅ Successfully ran mixed package test program")
+	t.Logf("Program output: %s", output)
+	
+	// Verify output contains expected results from all packages
+	outputStr := string(output)
+	if !strings.Contains(outputStr, "Hello") {
+		t.Error("Output missing hello_world package result")
+	}
+	if !strings.Contains(outputStr, "prime") {
+		t.Error("Output missing math_utils package result") 
+	}
+	if !strings.Contains(outputStr, "example.txt") {
+		t.Error("Output missing path package result")
+	}
 }
 
 func TestCleanup(t *testing.T) {
