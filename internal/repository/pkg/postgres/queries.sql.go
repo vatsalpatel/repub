@@ -233,7 +233,7 @@ func (q *Queries) GetPackageVersions(ctx context.Context, packageID int32) ([]Pa
 }
 
 const listPackages = `-- name: ListPackages :many
-SELECT id, name, private, description, homepage, repository, documentation,  created_at, updated_at FROM packages 
+SELECT id, name, private, description, homepage, repository, documentation, created_at, updated_at FROM packages 
 ORDER BY name
 LIMIT $1 OFFSET $2
 `
