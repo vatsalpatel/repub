@@ -70,18 +70,15 @@ func setupRouter(pubSvc service.PubService, authSvc service.AuthService) *chi.Mu
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.RequestID)
-	r.Use(authmiddleware.OptionalAuth(authSvc))
+	r.Use(authmiddleware.RequireAuthMiddleware(authSvc, false)) // false = read access sufficient
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/packages", func(r chi.Router) {
 			// Read-only routes (require read tokens)
-			r.Group(func(r chi.Router) {
-				r.Use(authmiddleware.RequireAuthMiddleware(authSvc, false)) // false = read access sufficient
-				r.Get("/{package}", handlers.GetPackageHandler(pubSvc))
-				r.Get("/{package}/versions/{version}", handlers.GetPackageVersionHandler(pubSvc))
-				r.Get("/{package}/advisories", handlers.GetAdvisoriesHandler(pubSvc))
-			})
+			r.Get("/{package}", handlers.GetPackageHandler(pubSvc))
+			r.Get("/{package}/versions/{version}", handlers.GetPackageVersionHandler(pubSvc))
+			r.Get("/{package}/advisories", handlers.GetAdvisoriesHandler(pubSvc))
 
 			// Write routes (require write tokens)
 			r.Group(func(r chi.Router) {
