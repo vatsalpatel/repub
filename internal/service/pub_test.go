@@ -16,7 +16,7 @@ func TestPubService_GetPackage(t *testing.T) {
 		Package: repos.DB.Repo,
 		Storage: repos.StorageSvc,
 		Pubspec: repos.PubspecSvc,
-		Port:    "8080",
+		BaseURL: "http://localhost:8080",
 	})
 
 	ctx := context.Background()
@@ -70,7 +70,7 @@ func TestPubService_GetPackage_NotFound(t *testing.T) {
 		Package: repos.DB.Repo,
 		Storage: repos.StorageSvc,
 		Pubspec: repos.PubspecSvc,
-		Port:    "8080",
+		BaseURL: "http://localhost:8080",
 	})
 
 	result, err := svc.GetPackage(context.Background(), "nonexistent")
@@ -91,7 +91,7 @@ func TestPubService_ListPackages(t *testing.T) {
 		Package: repos.DB.Repo,
 		Storage: repos.StorageSvc,
 		Pubspec: repos.PubspecSvc,
-		Port:    "8080",
+		BaseURL: "http://localhost:8080",
 	})
 
 	ctx := context.Background()
@@ -127,7 +127,7 @@ func TestPubService_PublishPackage(t *testing.T) {
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		// Create a test archive with pubspec.yaml, README.md, and CHANGELOG.md
@@ -217,7 +217,7 @@ This is a test package for testing purposes.`,
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		ctx := context.Background()
@@ -285,7 +285,7 @@ description: A test package with updates`,
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		ctx := context.Background()
@@ -338,7 +338,7 @@ description: Malicious update`,
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		ctx := context.Background()
@@ -379,7 +379,7 @@ description: A test package`,
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		// Create archive with invalid pubspec.yaml
@@ -411,7 +411,7 @@ description: A test package`,
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		// Create archive without pubspec.yaml
@@ -472,7 +472,7 @@ func TestPubService_ErrorCases(t *testing.T) {
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		ctx := context.Background()

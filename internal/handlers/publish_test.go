@@ -24,12 +24,12 @@ func TestUploadPackageHandler(t *testing.T) {
 	t.Run("successful package upload", func(t *testing.T) {
 		repos := testutil.SetupTestRepositories(t)
 		defer repos.Close()
-		
+
 		pubSvc := service.NewPubService(service.PackageDependencies{
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:9090",
 		})
 
 		// Create a test archive
@@ -44,17 +44,17 @@ description: A test package`,
 		// Create multipart form request
 		var body bytes.Buffer
 		writer := multipart.NewWriter(&body)
-		
+
 		part, err := writer.CreateFormFile("file", "test_package-1.0.0.tar.gz")
 		if err != nil {
 			t.Fatalf("Failed to create form file: %v", err)
 		}
-		
+
 		_, err = io.Copy(part, bytes.NewReader(archive))
 		if err != nil {
 			t.Fatalf("Failed to copy archive data: %v", err)
 		}
-		
+
 		err = writer.Close()
 		if err != nil {
 			t.Fatalf("Failed to close writer: %v", err)
@@ -63,7 +63,7 @@ description: A test package`,
 		// Create request with auth context
 		req := httptest.NewRequest("POST", "/api/packages/versions/new", &body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
-		
+
 		// Add authentication to context
 		req = addAuthToContext(req)
 
@@ -94,12 +94,12 @@ description: A test package`,
 	t.Run("unauthorized request", func(t *testing.T) {
 		repos := testutil.SetupTestRepositories(t)
 		defer repos.Close()
-		
+
 		pubSvc := service.NewPubService(service.PackageDependencies{
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:9090",
 		})
 
 		// Create a simple request without auth
@@ -118,18 +118,18 @@ description: A test package`,
 	t.Run("invalid multipart form", func(t *testing.T) {
 		repos := testutil.SetupTestRepositories(t)
 		defer repos.Close()
-		
+
 		pubSvc := service.NewPubService(service.PackageDependencies{
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		// Create request with invalid content type
 		req := httptest.NewRequest("POST", "/api/packages/versions/new", strings.NewReader("invalid data"))
 		req.Header.Set("Content-Type", "text/plain")
-		
+
 		// Add authentication to context
 		req = addAuthToContext(req)
 
@@ -145,12 +145,12 @@ description: A test package`,
 	t.Run("missing file in form", func(t *testing.T) {
 		repos := testutil.SetupTestRepositories(t)
 		defer repos.Close()
-		
+
 		pubSvc := service.NewPubService(service.PackageDependencies{
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		// Create multipart form without file
@@ -161,7 +161,7 @@ description: A test package`,
 
 		req := httptest.NewRequest("POST", "/api/packages/versions/new", &body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
-		
+
 		// Add authentication to context
 		req = addAuthToContext(req)
 
@@ -177,29 +177,29 @@ description: A test package`,
 	t.Run("invalid archive content", func(t *testing.T) {
 		repos := testutil.SetupTestRepositories(t)
 		defer repos.Close()
-		
+
 		pubSvc := service.NewPubService(service.PackageDependencies{
 			Package: repos.DB.Repo,
 			Storage: repos.StorageSvc,
 			Pubspec: repos.PubspecSvc,
-			Port:    "8080",
+			BaseURL: "http://localhost:8080",
 		})
 
 		// Create multipart form with invalid archive
 		var body bytes.Buffer
 		writer := multipart.NewWriter(&body)
-		
+
 		part, err := writer.CreateFormFile("file", "invalid.tar.gz")
 		if err != nil {
 			t.Fatalf("Failed to create form file: %v", err)
 		}
-		
+
 		// Write invalid archive data
 		_, err = part.Write([]byte("this is not a valid tar.gz archive"))
 		if err != nil {
 			t.Fatalf("Failed to write invalid data: %v", err)
 		}
-		
+
 		err = writer.Close()
 		if err != nil {
 			t.Fatalf("Failed to close writer: %v", err)
