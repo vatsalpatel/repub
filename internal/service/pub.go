@@ -31,7 +31,7 @@ type PubService interface {
 
 type (
 	PackageDependencies struct {
-		Port    string
+		BaseURL string
 		Package pkg.Repository
 		Storage storage.Repository
 		Pubspec pubspec.Repository
@@ -48,7 +48,7 @@ func NewPubService(deps PackageDependencies) PubService {
 }
 
 func (s *packageService) baseURL() string {
-	return fmt.Sprintf("http://localhost:%s", s.Port)
+	return s.BaseURL
 }
 
 func (s *packageService) GetPackage(ctx context.Context, name string) (*domain.PackageResponse, error) {

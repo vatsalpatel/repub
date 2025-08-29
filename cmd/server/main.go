@@ -50,7 +50,7 @@ func main() {
 		Storage: storageRepo,
 		Package: packageRepo,
 		Pubspec: pubspecRepo,
-		Port:    cfg.Port,
+		BaseURL: cfg.BaseURL,
 	})
 	authSvc := service.NewAuthService(cfg.ReadTokens, cfg.WriteTokens)
 
