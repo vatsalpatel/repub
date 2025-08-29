@@ -202,7 +202,7 @@ func waitForServer(t *testing.T, url string, timeout time.Duration) bool {
 	
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		cmd := exec.Command("curl", "-f", "-s", url)
+		cmd := exec.Command("curl", "-f", "-s", "-H", "Authorization: Bearer "+authToken, url)
 		if cmd.Run() == nil {
 			return true
 		}
@@ -271,20 +271,20 @@ func testWebInterface(t *testing.T) {
 	
 	t.Log("🌐 Testing web interface...")
 
-	// Test homepage
-	cmd := exec.Command("curl", "-f", "-s", serverURL)
+	// Test homepage with authentication
+	cmd := exec.Command("curl", "-f", "-s", "-H", "Authorization: Bearer "+authToken, serverURL)
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Failed to access homepage: %v", err)
 	}
 
-	// Test packages list
-	cmd = exec.Command("curl", "-f", "-s", serverURL+"/packages")
+	// Test packages list with authentication
+	cmd = exec.Command("curl", "-f", "-s", "-H", "Authorization: Bearer "+authToken, serverURL+"/packages")
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Failed to access packages list: %v", err)
 	}
 
-	// Test specific package page
-	cmd = exec.Command("curl", "-f", "-s", serverURL+"/packages/hello_world")
+	// Test specific package page with authentication
+	cmd = exec.Command("curl", "-f", "-s", "-H", "Authorization: Bearer "+authToken, serverURL+"/packages/hello_world")
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Failed to access hello_world package page: %v", err)
 	}
