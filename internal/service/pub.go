@@ -361,12 +361,15 @@ func (s *packageService) extractFilesFromArchive(archiveData []byte) (pubspecCon
 
 		switch strings.ToLower(fileName) {
 		case "pubspec.yaml":
-			content, err := io.ReadAll(tarReader)
-			if err != nil {
-				return "", nil, nil, fmt.Errorf("failed to read pubspec.yaml: %w", err)
+			// Only process root-level pubspec.yaml (no subdirectories)
+			if !foundPubspec && !strings.Contains(fileName, "/") {
+				content, err := io.ReadAll(tarReader)
+				if err != nil {
+					return "", nil, nil, fmt.Errorf("failed to read pubspec.yaml: %w", err)
+				}
+				pubspecContent = string(content)
+				foundPubspec = true
 			}
-			pubspecContent = string(content)
-			foundPubspec = true
 
 		case "readme.md":
 			content, err := io.ReadAll(tarReader)
