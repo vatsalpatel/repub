@@ -1,7 +1,13 @@
 package service
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
+	"io"
+	"os"
+	"path/filepath"
 	"repub/internal/domain"
 	"repub/internal/testutil"
 	"strings"
@@ -494,4 +500,99 @@ func TestPubService_ErrorCases(t *testing.T) {
 // Helper function
 func stringPtr(s string) *string {
 	return &s
+}
+
+func TestExtractPubspecFromArchive(t *testing.T) {
+	// Create tar archive from quill testdata
+	archiveData := createArchiveFromQuillTestData(t)
+
+	// Use the internal service method to extract pubspec content
+	svc := &packageService{}
+	pubspecContent, _, _, err := svc.extractFilesFromArchive(archiveData)
+	if err != nil {
+		t.Fatalf("Failed to extract pubspec: %v", err)
+	}
+
+	// Verify the extracted pubspec content is from the root quill package
+	if !strings.Contains(pubspecContent, "name: quill") {
+		t.Errorf("Expected pubspec content to contain 'name: quill', got: %s", pubspecContent)
+	}
+
+	if !strings.Contains(pubspecContent, "version: 1.0.0") {
+		t.Errorf("Expected pubspec content to contain 'version: 1.0.0', got: %s", pubspecContent)
+	}
+
+	if !strings.Contains(pubspecContent, "A rich text editor for Flutter") {
+		t.Errorf("Expected pubspec content to contain root description, got: %s", pubspecContent)
+	}
+
+	// Verify it's NOT from the nested packages
+	if strings.Contains(pubspecContent, "name: quill_extension") {
+		t.Error("Pubspec content should NOT be from quill_extension package")
+	}
+
+	if strings.Contains(pubspecContent, "name: quill_test_fixtures") {
+		t.Error("Pubspec content should NOT be from quill_test_fixtures package")
+	}
+
+	if strings.Contains(pubspecContent, "version: 2.0.0") {
+		t.Error("Pubspec content should NOT contain version 2.0.0 from extension package")
+	}
+
+	t.Logf("Extracted pubspec content:\n%s", pubspecContent)
+}
+
+// createArchiveFromQuillTestData creates a tar.gz from the quill testdata directory
+func createArchiveFromQuillTestData(t *testing.T) []byte {
+	testdataPath := "testdata/quill"
+
+	var buf bytes.Buffer
+	gzWriter := gzip.NewWriter(&buf)
+	tarWriter := tar.NewWriter(gzWriter)
+
+	// Walk the quill directory
+	err := filepath.Walk(testdataPath, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		// Get relative path from quill root
+		relPath, err := filepath.Rel("testdata", filePath)
+		if err != nil {
+			return err
+		}
+
+		header := &tar.Header{
+			Name:    relPath,
+			Mode:    0644,
+			Size:    info.Size(),
+			ModTime: info.ModTime(),
+		}
+
+		if err := tarWriter.WriteHeader(header); err != nil {
+			return err
+		}
+
+		file, err := os.Open(filePath)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		_, err = io.Copy(tarWriter, file)
+		return err
+	})
+
+	if err != nil {
+		t.Fatalf("Failed to create tar: %v", err)
+	}
+
+	tarWriter.Close()
+	gzWriter.Close()
+
+	return buf.Bytes()
 }

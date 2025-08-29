@@ -1,0 +1,19 @@
+name: quill_extension
+version: 2.0.0
+description: Extensions for quill editor
+homepage: https://github.com/singerdmx/flutter-quill-extensions
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  quill:
+    path: ../
+  http: ^0.13.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

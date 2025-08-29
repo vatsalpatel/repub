@@ -361,12 +361,19 @@ func (s *packageService) extractFilesFromArchive(archiveData []byte) (pubspecCon
 
 		switch strings.ToLower(fileName) {
 		case "pubspec.yaml":
-			// Only process root-level pubspec.yaml (no subdirectories)
-			if !foundPubspec && !strings.Contains(fileName, "/") {
-				content, err := io.ReadAll(tarReader)
-				if err != nil {
-					return "", nil, nil, fmt.Errorf("failed to read pubspec.yaml: %w", err)
-				}
+			// Always read content first
+			content, err := io.ReadAll(tarReader)
+			if err != nil {
+				return "", nil, nil, fmt.Errorf("failed to read pubspec.yaml: %w", err)
+			}
+			// Only keep if it's the root pubspec (no path separators) or we haven't found any yet
+			pathDepth := strings.Count(header.Name, "/")
+			if pathDepth == 0 {
+				// This is the root pubspec - always use it
+				pubspecContent = string(content)
+				foundPubspec = true
+			} else if !foundPubspec {
+				// No root pubspec found yet, temporarily use this nested one
 				pubspecContent = string(content)
 				foundPubspec = true
 			}
