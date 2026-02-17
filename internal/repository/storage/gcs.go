@@ -17,6 +17,9 @@ type gcsRepository struct {
 }
 
 func NewGCSRepository(bucket string) (Repository, error) {
+	if bucket == "" {
+		return nil, fmt.Errorf("GCS bucket name is required")
+	}
 	client, err := gcs.NewClient(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GCS client: %w", err)
@@ -35,11 +38,13 @@ func (r *gcsRepository) objectKey(path string) string {
 func (r *gcsRepository) Store(packageName, version string, data []byte) (string, error) {
 	key := fmt.Sprintf("%s/%s/%s-%s.tar.gz", packageName, version, packageName, version)
 	w := r.client.Bucket(r.bucket).Object(key).NewWriter(context.Background())
-	if _, err := w.Write(data); err != nil {
-		return "", fmt.Errorf("failed to write to GCS: %w", err)
+	_, writeErr := w.Write(data)
+	closeErr := w.Close()
+	if writeErr != nil {
+		return "", fmt.Errorf("failed to write to GCS: %w", writeErr)
 	}
-	if err := w.Close(); err != nil {
-		return "", fmt.Errorf("failed to close GCS writer: %w", err)
+	if closeErr != nil {
+		return "", fmt.Errorf("failed to close GCS writer: %w", closeErr)
 	}
 	return key, nil
 }
