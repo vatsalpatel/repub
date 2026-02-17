@@ -3,7 +3,6 @@ environ:
   PORT: 80
   BASE_URL: http://localhost:80
   LOG_LEVEL: INFO
-  STORAGE_PATH: /app/storage
 
 image:
   repository: ghcr.io
@@ -18,6 +17,16 @@ autoscaling:
   targetMemoryUtilizationPercentage: 80
 
 domain: repub.dev
+
+storage:
+  backend: local  # "local" or "gcs"
+  local:
+    path: /app/storage
+  gcs:
+    bucket: ""
+    # Name of an existing Secret containing the GCS service account JSON key.
+    credentialsSecret: ""
+    credentialsKey: key.json
 
 persistence:
   enabled: true

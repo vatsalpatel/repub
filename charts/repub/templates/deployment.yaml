@@ -38,27 +38,51 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: STORAGE_BACKEND
+              value: {{ .Values.storage.backend | quote }}
+            {{- if eq .Values.storage.backend "local" }}
+            - name: STORAGE_PATH
+              value: {{ .Values.storage.local.path | quote }}
+            {{- end }}
+            {{- if eq .Values.storage.backend "gcs" }}
+            - name: GCS_BUCKET
+              value: {{ required "storage.gcs.bucket is required when using GCS backend" .Values.storage.gcs.bucket | quote }}
+            {{- if .Values.storage.gcs.credentialsSecret }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/gcs/{{ .Values.storage.gcs.credentialsKey | default "key.json" }}
+            {{- end }}
+            {{- end }}
             {{- range $key, $value := .Values.environ }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if or .Values.additionalVolumeMounts .Values.persistence.enabled }}
+          {{- if or .Values.additionalVolumeMounts (and (eq .Values.storage.backend "local") .Values.persistence.enabled) (and (eq .Values.storage.backend "gcs") .Values.storage.gcs.credentialsSecret) }}
           volumeMounts:
-            {{- if .Values.persistence.enabled }}
+            {{- if and (eq .Values.storage.backend "local") .Values.persistence.enabled }}
             - name: storage
               mountPath: {{ .Values.persistence.mountPath | default "/app/storage" }}
               readOnly: false
+            {{- end }}
+            {{- if and (eq .Values.storage.backend "gcs") .Values.storage.gcs.credentialsSecret }}
+            - name: gcs-credentials
+              mountPath: /var/secrets/gcs
+              readOnly: true
             {{- end }}
             {{- if .Values.additionalVolumeMounts }}
             {{- toYaml .Values.additionalVolumeMounts | nindent 12 }}
             {{- end }}
           {{- end }}
-      {{- if or .Values.additionalVolumes .Values.persistence.enabled }}
+      {{- if or .Values.additionalVolumes (and (eq .Values.storage.backend "local") .Values.persistence.enabled) (and (eq .Values.storage.backend "gcs") .Values.storage.gcs.credentialsSecret) }}
       volumes:
-        {{- if .Values.persistence.enabled }}
+        {{- if and (eq .Values.storage.backend "local") .Values.persistence.enabled }}
         - name: storage
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.claimName | default "repub-storage-pvc" }}
+        {{- end }}
+        {{- if and (eq .Values.storage.backend "gcs") .Values.storage.gcs.credentialsSecret }}
+        - name: gcs-credentials
+          secret:
+            secretName: {{ .Values.storage.gcs.credentialsSecret }}
         {{- end }}
         {{- if .Values.additionalVolumes }}
         {{- toYaml .Values.additionalVolumes | nindent 8 }}
