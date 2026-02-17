@@ -15,13 +15,15 @@ const (
 )
 
 type Config struct {
-	DatabaseURL string
-	StoragePath string
-	Port        string
-	BaseURL     string
-	LogLevel    slog.Level
-	ReadTokens  []Token
-	WriteTokens []Token
+	DatabaseURL    string
+	StoragePath    string
+	StorageBackend string
+	GCSBucket      string
+	Port           string
+	BaseURL        string
+	LogLevel       slog.Level
+	ReadTokens     []Token
+	WriteTokens    []Token
 }
 
 type Token struct {
@@ -42,13 +44,15 @@ func Load() *Config {
 	}
 
 	return &Config{
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://localhost/repub?sslmode=disable"),
-		StoragePath: getEnv("STORAGE_PATH", "/tmp/storage"),
-		Port:        getEnv("PORT", "9090"),
-		BaseURL:     getEnv("BASE_URL", "http://localhost:9090"),
-		LogLevel:    parseLogLevel(getEnv("LOG_LEVEL", "info")),
-		ReadTokens:  readTokens,
-		WriteTokens: writeTokens,
+		DatabaseURL:    getEnv("DATABASE_URL", "postgres://localhost/repub?sslmode=disable"),
+		StoragePath:    getEnv("STORAGE_PATH", "/tmp/storage"),
+		StorageBackend: getEnv("STORAGE_BACKEND", "local"),
+		GCSBucket:      getEnv("GCS_BUCKET", ""),
+		Port:           getEnv("PORT", "9090"),
+		BaseURL:        getEnv("BASE_URL", "http://localhost:9090"),
+		LogLevel:       parseLogLevel(getEnv("LOG_LEVEL", "info")),
+		ReadTokens:     readTokens,
+		WriteTokens:    writeTokens,
 	}
 }
 
