@@ -39,7 +39,16 @@ func main() {
 
 	// Initialize layers
 	queries := postgres.New(dbConn)
-	storageRepo := storage.NewLocalRepository(cfg.StoragePath)
+	var storageRepo storage.Repository
+	if cfg.StorageBackend == "gcs" {
+		var err error
+		storageRepo, err = storage.NewGCSRepository(cfg.GCSBucket)
+		if err != nil {
+			log.Fatal("Failed to create GCS storage:", err)
+		}
+	} else {
+		storageRepo = storage.NewLocalRepository(cfg.StoragePath)
+	}
 	pubspecRepo := pubspec.NewParserRepository()
 
 	// Repository layer
